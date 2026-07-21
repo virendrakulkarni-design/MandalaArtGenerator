@@ -560,6 +560,40 @@
     .meta, .cell-tooltip { display: none !important; }
     body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   }
+
+  /* Analysis Modal */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.active {
+    display: flex;
+  }
+  .modal-content {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+    width: 400px;
+    max-width: 90%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .modal-content h2 { margin: 0; font-family: var(--serif); font-size: 20px; color: var(--gold); }
+  .modal-content img { width: 100px; height: 100px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); margin: 0 auto; display: block; }
+  .analysis-results { background: var(--surface-2); padding: 16px; border-radius: 8px; border: 1px solid var(--border-soft); font-size: 13px; line-height: 1.6; }
+  .analysis-results strong { color: var(--gold-bright); }
+  .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 8px; }
+
 </style>
 </head>
 <body>
@@ -690,6 +724,8 @@
 
     <div class="toolbar-creative" id="genActions">
       <button class="btn-primary" id="generateBtn">✨ Generate</button>
+      <button class="btn-secondary" id="analyzeBtn">🖼️ Analyze Image</button>
+      <input type="file" id="imageUpload" accept="image/*" style="display:none;">
       <button class="btn-secondary" id="evolveBtn">🔄 Evolve</button>
       <button class="btn-secondary" id="animateBtn">▶ Animate</button>
       <select class="anim-mode-select" id="animMode">
@@ -728,6 +764,24 @@
     </div>
     
     <div class="meta" id="metaReadout"></div>
+  </div>
+
+  <div class="modal-overlay" id="analysisModal">
+    <div class="modal-content">
+      <h2>Image Analysis Complete</h2>
+      <img id="analysisPreview" src="" alt="Uploaded preview">
+      <div class="analysis-results">
+        <div>Palette Match: <strong id="resPalette"></strong></div>
+        <div>Motif Match: <strong id="resMotif"></strong></div>
+        <div>Fill Style: <strong id="resFill"></strong></div>
+        <div>Complexity: <strong id="resComplexity"></strong></div>
+        <div>Rings: <strong id="resRings"></strong></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="cancelAnalysisBtn">Cancel</button>
+        <button class="btn-primary" id="applyAnalysisBtn">Generate Similar Design</button>
+      </div>
+    </div>
   </div>
 
 </div>
@@ -789,7 +843,18 @@
     brushSize: document.getElementById('brushSize'),
     brushColor: document.getElementById('brushColor'),
     clearCanvasBtn: document.getElementById('clearCanvasBtn'),
-    downloadPngBtn: document.getElementById('downloadPngBtn')
+    downloadPngBtn: document.getElementById('downloadPngBtn'),
+    analyzeBtn: document.getElementById('analyzeBtn'),
+    imageUpload: document.getElementById('imageUpload'),
+    analysisModal: document.getElementById('analysisModal'),
+    analysisPreview: document.getElementById('analysisPreview'),
+    resPalette: document.getElementById('resPalette'),
+    resMotif: document.getElementById('resMotif'),
+    resFill: document.getElementById('resFill'),
+    resComplexity: document.getElementById('resComplexity'),
+    resRings: document.getElementById('resRings'),
+    cancelAnalysisBtn: document.getElementById('cancelAnalysisBtn'),
+    applyAnalysisBtn: document.getElementById('applyAnalysisBtn')
   };
 
   var UNIT_CONFIGS = {
@@ -1627,6 +1692,144 @@
     }
     window.print(); 
   });
+
+  // --- IMAGE ANALYSIS LOGIC ---
+  var detectedSettings = null;
+
+  els.analyzeBtn.addEventListener('click', function(){ els.imageUpload.click(); });
+  
+  els.imageUpload.addEventListener('change', function(e){
+    var file = e.target.files[0];
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(event){
+       var img = new Image();
+       img.onload = function(){
+          processImageAnalysis(img);
+          els.imageUpload.value = '';
+       };
+       img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  function hexToRgb(hex) {
+    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : null;
+  }
+  
+  function processImageAnalysis(img) {
+      els.analysisPreview.src = img.src;
+      var cvs = document.createElement('canvas');
+      var ctx = cvs.getContext('2d');
+      cvs.width = 150; 
+      cvs.height = 150;
+      ctx.drawImage(img, 0, 0, cvs.width, cvs.height);
+      var imgData = ctx.getImageData(0,0,cvs.width,cvs.height);
+      var data = imgData.data;
+      
+      var rSum=0, gSum=0, bSum=0, validPixels=0;
+      var edges = 0;
+      
+      for(var i=0; i<data.length; i+=4){
+          var r = data[i], g = data[i+1], b = data[i+2];
+          var luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+          if (luma > 20 && luma < 235) {
+             rSum += r; gSum += g; bSum += b; validPixels++;
+          }
+      }
+      
+      for(var y=0; y<cvs.height; y++){
+          for(var x=0; x<cvs.width-1; x++){
+              var idx = (y*cvs.width + x)*4;
+              var l1 = data[idx] + data[idx+1] + data[idx+2];
+              var l2 = data[idx+4] + data[idx+5] + data[idx+6];
+              if (Math.abs(l1 - l2) > 150) edges++;
+          }
+      }
+      
+      var edgeDensity = edges / (cvs.width * cvs.height);
+      var avgR = validPixels > 0 ? rSum/validPixels : 128;
+      var avgG = validPixels > 0 ? gSum/validPixels : 128;
+      var avgB = validPixels > 0 ? bSum/validPixels : 128;
+      
+      var bestPaletteIdx = 0;
+      var minDistance = Infinity;
+      for(var pi=0; pi<PALETTES.length-1; pi++) {
+          var p = PALETTES[pi];
+          var bestColDist = Infinity;
+          if (p.colors) {
+            p.colors.forEach(function(hex){
+                var c = hexToRgb(hex);
+                if(c){
+                    var d = Math.pow(c.r-avgR,2) + Math.pow(c.g-avgG,2) + Math.pow(c.b-avgB,2);
+                    if(d < bestColDist) bestColDist = d;
+                }
+            });
+          }
+          if(bestColDist < minDistance) {
+              minDistance = bestColDist;
+              bestPaletteIdx = pi;
+          }
+      }
+      
+      var comp = Math.max(5, Math.min(15, Math.round(edgeDensity * 120)));
+      var rings = Math.max(7, Math.min(20, Math.round(edgeDensity * 150)));
+      
+      var motif = 'organic';
+      var fill = 'detailed-linework';
+      if (edgeDensity > 0.15) { motif = 'zentangle'; fill = 'mixed'; }
+      else if (edgeDensity > 0.1) { motif = 'paisley'; fill = 'filled'; }
+      else if (edgeDensity > 0.05) { motif = 'floral'; fill = 'filled'; }
+      
+      if (edgeDensity > 0.12 && validPixels < (cvs.width*cvs.height)*0.5) {
+          motif = 'dot-mandala'; fill = 'stippled';
+      }
+      
+      if (edgeDensity > 0.08 && validPixels > 0) {
+         motif = pick(mulberry32(Math.floor(Math.random()*1e9)), ['dot-mandala','spiral-dots','paisley']);
+         fill = 'mixed';
+      }
+
+      detectedSettings = {
+          paletteIdx: bestPaletteIdx,
+          paletteName: PALETTES[bestPaletteIdx].name,
+          complexity: comp,
+          rings: rings,
+          motif: motif,
+          fill: fill
+      };
+      
+      els.resPalette.textContent = detectedSettings.paletteName;
+      els.resMotif.textContent = detectedSettings.motif;
+      els.resFill.textContent = detectedSettings.fill;
+      els.resComplexity.textContent = detectedSettings.complexity + ' / 15';
+      els.resRings.textContent = detectedSettings.rings;
+      
+      els.analysisModal.classList.add('active');
+  }
+
+  els.cancelAnalysisBtn.addEventListener('click', function(){
+      els.analysisModal.classList.remove('active');
+  });
+
+  els.applyAnalysisBtn.addEventListener('click', function(){
+      els.analysisModal.classList.remove('active');
+      if(detectedSettings) {
+         state.paletteIndex = detectedSettings.paletteIdx;
+         els.complexity.value = detectedSettings.complexity;
+         els.rings.value = detectedSettings.rings;
+         els.shapeStyle.value = detectedSettings.motif;
+         els.strokeStyle.value = detectedSettings.fill;
+         
+         Array.prototype.forEach.call(els.paletteGrid.children, function(c){ c.classList.remove('active'); });
+         var btn = els.paletteGrid.querySelector('[data-idx="'+detectedSettings.paletteIdx+'"]');
+         if(btn) btn.classList.add('active');
+         
+         render(true, true);
+      }
+  });
+
 
   // --- PRO MODE LOGIC ---
   var isDrawMode = false;
