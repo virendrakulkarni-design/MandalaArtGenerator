@@ -92,14 +92,14 @@
     color:var(--text);
   }
   .tagline{
-    font-size:13px;
+    font-size:12px;
     color:var(--text-dim);
-    margin:0 0 30px;
+    margin:0 0 16px;
     line-height:1.5;
   }
   fieldset{
     border:none;
-    margin:0 0 26px;
+    margin:0 0 16px;
     padding:0;
   }
   .group-label{
@@ -107,11 +107,11 @@
     text-transform:uppercase;
     letter-spacing:0.12em;
     color:var(--gold);
-    margin:0 0 14px;
+    margin:0 0 10px;
     font-weight:600;
   }
   .field{
-    margin-bottom:16px;
+    margin-bottom:12px;
   }
   .field:last-child{ margin-bottom:0; }
   .field-row{
@@ -303,26 +303,28 @@
     position: absolute;
     top: 50%; left: 50%;
     transform: translate(-50%, -45%) scale(0.95);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    padding: 16px;
-    border-radius: 12px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s, transform 0.2s;
-    z-index: 20;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    width: 90vmin;
-    max-width: 900px;
-    max-height: 90vh;
+  .cell-tooltip{
+    position:absolute;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%);
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:16px;
+    box-shadow:0 12px 30px rgba(0,0,0,0.5);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    opacity:0;
+    pointer-events:none;
+    transition: opacity 0.3s, transform 0.3s;
+    z-index:20;
+    max-width:300px;
   }
   .canvas-wrap:hover .cell-tooltip {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    opacity:1;
+    transform:translate(-50%, -5px);
   }
   .cell-tooltip h3 {
     margin: 0;
@@ -381,107 +383,103 @@
       </svg>
       <h1>Mandala generator</h1>
     </div>
-    <p class="tagline">Set the structure, pick a palette, and let it compose a symmetrical design. Every slider redraws the same seed &mdash; shuffle for a fresh one.</p>
-
-    <fieldset>
-      <div class="group-label">App Theme</div>
-      <div class="field">
-        <select id="appTheme">
-          <option value="dark">Dark</option>
-          <option value="light">Light</option>
-          <option value="professional" selected>Professional (Default)</option>
-        </select>
-      </div>
-    </fieldset>
-
-    <fieldset>
-      <div class="group-label">Canvas</div>
-      <div class="field">
-        <div class="field-row">
-          <label for="sizeUnit">Unit</label>
-        </div>
-        <select id="sizeUnit" style="margin-bottom: 12px;">
-          <option value="px">Pixels (px)</option>
-          <option value="in" selected>Inches (in)</option>
-          <option value="cm">Centimeters (cm)</option>
-          <option value="mm">Millimeters (mm)</option>
-        </select>
-      </div>
-      <div class="field">
-        <div class="field-row">
-          <label for="size">Size</label>
-          <span class="readout" id="sizeReadout">6 in</span>
-        </div>
-        <input type="range" id="size" min="3" max="24" step="0.1" value="6">
-        <div class="ticks"><span id="sizeTickMin">3</span><span id="sizeTickMax">24</span></div>
-      </div>
-    </fieldset>
-
-    <fieldset>
-      <div class="group-label">Structure</div>
-      <div class="field">
-        <div class="field-row">
-          <label for="rings">Concentric circles</label>
-          <span class="readout" id="ringsReadout">7</span>
-        </div>
-        <input type="range" id="rings" min="3" max="20" step="1" value="7">
-        <div class="ticks"><span>3</span><span>20</span></div>
-      </div>
-      <div class="field">
-        <div class="field-row">
-          <label for="complexity">Complexity</label>
-          <span class="readout" id="complexityReadout">5 / 15</span>
-        </div>
-        <input type="range" id="complexity" min="1" max="15" step="1" value="5">
-        <div class="ticks"><span>simple</span><span>intricate</span></div>
-      </div>
-      <div class="field">
-        <div class="checkbox-row">
-          <input type="checkbox" id="showGrid" checked>
-          <label for="showGrid">Show guide grid</label>
-        </div>
-      </div>
-    </fieldset>
-
-    <fieldset>
-      <div class="group-label">Style</div>
-      <div class="field">
-        <label for="shapeStyle">Motif style</label>
-        <select id="shapeStyle">
-          <option value="organic" selected>Organic &mdash; petals &amp; leaves</option>
-          <option value="geometric">Geometric &mdash; diamonds &amp; slices</option>
-          <option value="detailed-ink">Detailed Ink / Intricate</option>
-          <option value="calligraphy">Swooshes &amp; Brush Strokes</option>
-          <option value="mixed">Mixed</option>
-        </select>
-      </div>
-      <div class="field">
-        <label for="strokeStyle">Fill style</label>
-        <select id="strokeStyle">
-          <option value="filled">Filled shapes</option>
-          <option value="outlined">Outlined only</option>
-          <option value="detailed-linework" selected>Detailed Linework (B&amp;W)</option>
-          <option value="stippled">Dot Mandala (Stippled)</option>
-          <option value="mixed">Mixed</option>
-        </select>
-      </div>
-      <div class="field">
-        <div class="checkbox-row">
-          <input type="checkbox" id="mirror" checked>
-          <label for="mirror">Mirror each section</label>
-        </div>
-      </div>
-    </fieldset>
-
-    <fieldset>
-      <div class="group-label">Palette</div>
-      <div class="palette-grid" id="paletteGrid"></div>
-    </fieldset>
-
-    <div class="mode-toggle" style="display:flex; gap:10px; margin-bottom: 20px;">
-      <button class="btn-primary" id="btnGenMode" style="flex:1;">Generative Mode</button>
+    <div class="tagline">Set the structure, pick a palette, and let it compose a symmetrical design.</div>
+    
+    <div class="mode-toggle" style="display:flex; gap:10px; margin-bottom: 15px;">
+      <button class="btn-primary active" id="btnGenMode" style="flex:1;">Generative Mode</button>
       <button class="btn-secondary" id="btnDrawMode" style="flex:1;">Draw Mode</button>
     </div>
+
+    <div id="generativeControls">
+      <fieldset>
+        <div class="group-label">App Theme</div>
+        <div class="field">
+          <select id="appTheme">
+            <option value="dark">Dark</option>
+            <option value="light">Light</option>
+            <option value="professional" selected>Professional (Default)</option>
+          </select>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <div class="group-label">Canvas Settings</div>
+        <div class="field">
+          <div class="field-row">
+            <label for="size">Size</label>
+            <span class="readout" id="sizeReadout">6 in</span>
+          </div>
+          <div style="display:flex; gap:10px; align-items:center;">
+            <input type="range" id="size" min="3" max="24" step="0.1" value="6" style="flex:1;">
+            <select id="sizeUnit" style="width: 80px; padding: 4px;">
+              <option value="px">px</option>
+              <option value="in" selected>in</option>
+              <option value="cm">cm</option>
+              <option value="mm">mm</option>
+            </select>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <div class="group-label">Structure</div>
+        <div class="field">
+          <div class="field-row">
+            <label for="rings">Rings</label>
+            <span class="readout" id="ringsReadout">7</span>
+          </div>
+          <input type="range" id="rings" min="3" max="20" step="1" value="7">
+        </div>
+        <div class="field">
+          <div class="field-row">
+            <label for="complexity">Complexity</label>
+            <span class="readout" id="complexityReadout">5 / 15</span>
+          </div>
+          <input type="range" id="complexity" min="1" max="15" step="1" value="5">
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <div class="group-label">Style</div>
+        <div class="field" style="display:flex; gap:10px;">
+          <div style="flex:1;">
+            <label for="shapeStyle" style="display:block; margin-bottom:4px;">Motif</label>
+            <select id="shapeStyle">
+              <option value="organic" selected>Organic</option>
+              <option value="geometric">Geometric</option>
+              <option value="detailed-ink">Ink</option>
+              <option value="calligraphy">Brush</option>
+              <option value="mixed">Mixed</option>
+            </select>
+          </div>
+          <div style="flex:1;">
+            <label for="strokeStyle" style="display:block; margin-bottom:4px;">Fill</label>
+            <select id="strokeStyle">
+              <option value="filled">Filled</option>
+              <option value="outlined">Outlined</option>
+              <option value="detailed-linework" selected>Linework</option>
+              <option value="stippled">Dots</option>
+              <option value="mixed">Mixed</option>
+            </select>
+          </div>
+        </div>
+        <div class="field" style="display:flex; justify-content:space-between; margin-top:10px;">
+          <div class="checkbox-row">
+            <input type="checkbox" id="mirror" checked>
+            <label for="mirror">Mirror sections</label>
+          </div>
+          <div class="checkbox-row">
+            <input type="checkbox" id="showGrid" checked>
+            <label for="showGrid">Show grid</label>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <div class="group-label">Palette</div>
+        <div class="palette-grid" id="paletteGrid"></div>
+      </fieldset>
+    </div> <!-- generativeControls end -->
 
     <div class="actions" id="genActions">
       <button class="btn-primary" id="generateBtn">Generate new design</button>
@@ -563,6 +561,7 @@
     btnGenMode: document.getElementById('btnGenMode'),
     btnDrawMode: document.getElementById('btnDrawMode'),
     genActions: document.getElementById('genActions'),
+    generativeControls: document.getElementById('generativeControls'),
     drawActions: document.getElementById('drawActions'),
     drawCanvas: document.getElementById('drawCanvas'),
     brushSize: document.getElementById('brushSize'),
@@ -1295,6 +1294,7 @@
     els.btnDrawMode.classList.remove('active');
     els.btnDrawMode.classList.replace('btn-primary','btn-secondary');
     els.genActions.style.display = 'block';
+    els.generativeControls.style.display = 'block';
     els.drawActions.style.display = 'none';
     els.drawCanvas.style.display = 'none';
     els.svg.style.opacity = '1';
@@ -1307,6 +1307,7 @@
     els.btnGenMode.classList.remove('active');
     els.btnGenMode.classList.replace('btn-primary','btn-secondary');
     els.genActions.style.display = 'none';
+    els.generativeControls.style.display = 'none';
     els.drawActions.style.display = 'block';
     els.drawCanvas.style.display = 'block';
     // fade svg to act as grid
