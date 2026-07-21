@@ -682,21 +682,27 @@
           <div style="flex:1;">
             <label for="shapeStyle" style="display:block; margin-bottom:4px;">Motif</label>
             <select id="shapeStyle">
-              <option value="organic">Organic</option>
-              <option value="geometric">Geometric</option>
-              <option value="floral">Floral</option>
-              <option value="dot-mandala" selected>Dot Mandala</option>
-              <option value="spiral-dots">Spiral Dots</option>
-              <option value="paisley">Paisley</option>
-              <option value="zentangle">Zentangle</option>
-              <option value="detailed-ink">Ink</option>
-              <option value="calligraphy">Brush</option>
-              <option value="sacred-geometry">Sacred Geometry</option>
-              <option value="boho">Boho / Celestial</option>
-              <option value="minimalist">Minimalist</option>
-              <option value="abstract">Modern Abstract</option>
-              <option value="mixed">Mixed styles</option>
-              <option value="exact-replica">Exact Replica</option>
+              <optgroup label="Procedural">
+                <option value="organic">Organic</option>
+                <option value="geometric">Geometric</option>
+                <option value="floral">Floral</option>
+                <option value="dot-mandala" selected>Dot Mandala</option>
+                <option value="spiral-dots">Spiral Dots</option>
+                <option value="paisley">Paisley</option>
+                <option value="zentangle">Zentangle</option>
+                <option value="detailed-ink">Ink</option>
+                <option value="calligraphy">Brush</option>
+                <option value="sacred-geometry">Sacred Geometry</option>
+                <option value="boho">Boho / Celestial</option>
+                <option value="minimalist">Minimalist</option>
+                <option value="abstract">Modern Abstract</option>
+                <option value="mixed">Mixed styles</option>
+              </optgroup>
+              <optgroup label="Hand-Drawn Masterpieces">
+                <option value="exact-replica">Vaishnavi Original</option>
+                <option value="exact-replica-2">Dense Ferns (Image 1)</option>
+                <option value="exact-replica-3">Lotus Swirls (Image 3)</option>
+              </optgroup>
             </select>
           </div>
           <div style="flex:1;">
@@ -1314,6 +1320,213 @@
     }
   }
 
+  function generateExactReplica2SVG(params) {
+    var size = params.size * (params.unit === 'in' ? 96 : params.unit === 'cm' ? 37.795 : params.unit === 'mm' ? 3.7795 : 1);
+    var cx = size/2, cy = size/2;
+    var content = '<rect x="0" y="0" width="'+size+'" height="'+size+'" fill="#ffffff"/>';
+    var maxR = size * 0.45;
+    
+    // We will use 24-fold symmetry for the dense leaves
+    var sections = 24;
+    var sw = Math.max(0.5, size * 0.001);
+    var dark = '#000000';
+    var light = '#ffffff';
+    
+    // Central rings
+    content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+(maxR*0.04)+'" fill="'+dark+'"/>';
+    content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+(maxR*0.06)+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*2)+'"/>';
+    
+    var wedgeMarkup = '';
+    
+    // Layer 1: Small dark petals
+    var r1 = maxR * 0.08, r2 = maxR * 0.18;
+    var pTip1 = P(cx, cy, r2, 0);
+    var pBaseL = P(cx, cy, r1, -360/sections*0.4);
+    var pBaseR = P(cx, cy, r1, 360/sections*0.4);
+    var d1 = 'M '+pBaseL.x+' '+pBaseL.y+' Q '+P(cx,cy,r1*1.5, -360/sections).x+' '+P(cx,cy,r1*1.5, -360/sections).y+' '+pTip1.x+' '+pTip1.y+' Q '+P(cx,cy,r1*1.5, 360/sections).x+' '+P(cx,cy,r1*1.5, 360/sections).y+' '+pBaseR.x+' '+pBaseR.y+' Z';
+    wedgeMarkup += '<path d="'+d1+'" fill="'+dark+'"/>';
+    
+    // Layer 2: White outlined petals
+    var r3 = maxR * 0.32;
+    var pTip2 = P(cx, cy, r3, 0);
+    var p2BaseL = P(cx, cy, r2*0.8, -360/sections*0.5);
+    var p2BaseR = P(cx, cy, r2*0.8, 360/sections*0.5);
+    var d2 = 'M '+p2BaseL.x+' '+p2BaseL.y+' Q '+P(cx,cy,r2*1.3, -360/sections).x+' '+P(cx,cy,r2*1.3, -360/sections).y+' '+pTip2.x+' '+pTip2.y+' Q '+P(cx,cy,r2*1.3, 360/sections).x+' '+P(cx,cy,r2*1.3, 360/sections).y+' '+p2BaseR.x+' '+p2BaseR.y+' Z';
+    wedgeMarkup += '<path d="'+d2+'" fill="'+light+'" stroke="'+dark+'" stroke-width="'+(sw*1.5)+'"/>';
+    // Inner stippled leaf outline
+    var pTip2in = P(cx, cy, r3*0.85, 0);
+    var p2BaseLin = P(cx, cy, r2*0.9, -360/sections*0.3);
+    var p2BaseRin = P(cx, cy, r2*0.9, 360/sections*0.3);
+    var d2in = 'M '+p2BaseLin.x+' '+p2BaseLin.y+' Q '+P(cx,cy,r2*1.2, -360/sections*0.6).x+' '+P(cx,cy,r2*1.2, -360/sections*0.6).y+' '+pTip2in.x+' '+pTip2in.y+' Q '+P(cx,cy,r2*1.2, 360/sections*0.6).x+' '+P(cx,cy,r2*1.2, 360/sections*0.6).y+' '+p2BaseRin.x+' '+p2BaseRin.y+' Z';
+    wedgeMarkup += '<path d="'+d2in+'" fill="none" stroke="'+dark+'" stroke-width="'+sw+'"/>';
+    wedgeMarkup += stippledQBezier(pBaseL, pTip1, pTip2, sw*1.5, sw*0.5, dark);
+    
+    // Layer 3: Overlapping arches (we offset them by half a section)
+    var archR1 = maxR * 0.3, archR2 = maxR * 0.45;
+    var aL = P(cx, cy, archR1, 0);
+    var aR = P(cx, cy, archR1, 360/sections);
+    var aTip = P(cx, cy, archR2, 360/sections*0.5);
+    var archD = 'M '+aL.x+' '+aL.y+' Q '+P(cx,cy,archR1*1.2, 0).x+' '+P(cx,cy,archR1*1.2, 0).y+' '+aTip.x+' '+aTip.y+' Q '+P(cx,cy,archR1*1.2, 360/sections).x+' '+P(cx,cy,archR1*1.2, 360/sections).y+' '+aR.x+' '+aR.y;
+    wedgeMarkup += '<path d="'+archD+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*2)+'"/>';
+    
+    // Layer 4: Large fern leaves
+    var fR1 = maxR * 0.4, fR2 = maxR * 0.8;
+    var fTip = P(cx, cy, fR2, 0);
+    var fL = P(cx, cy, fR1, -360/sections*0.4);
+    var fR = P(cx, cy, fR1, 360/sections*0.4);
+    var fd = 'M '+fL.x+' '+fL.y+' C '+P(cx,cy,fR1*1.2, -360/sections).x+' '+P(cx,cy,fR1*1.2, -360/sections).y+' '+P(cx,cy,fR2*0.8, -360/sections*0.5).x+' '+P(cx,cy,fR2*0.8, -360/sections*0.5).y+' '+fTip.x+' '+fTip.y;
+    fd += ' C '+P(cx,cy,fR2*0.8, 360/sections*0.5).x+' '+P(cx,cy,fR2*0.8, 360/sections*0.5).y+' '+P(cx,cy,fR1*1.2, 360/sections).x+' '+P(cx,cy,fR1*1.2, 360/sections).y+' '+fR.x+' '+fR.y+' Z';
+    wedgeMarkup += '<path d="'+fd+'" fill="'+light+'" stroke="'+dark+'" stroke-width="'+(sw*2)+'"/>';
+    
+    // Fern stripes
+    var numStripes = 8;
+    for(var i=1; i<numStripes; i++){
+       var t = i/numStripes;
+       var cR = fR1 + (fR2 - fR1)*t;
+       var wA = (360/sections*0.4) * (1-t);
+       var sl = P(cx, cy, cR, -wA);
+       var sr = P(cx, cy, cR, wA);
+       var sc = P(cx, cy, cR*1.02, 0); // V-shape
+       wedgeMarkup += '<path d="M '+sl.x+' '+sl.y+' L '+sc.x+' '+sc.y+' L '+sr.x+' '+sr.y+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*1.5)+'"/>';
+    }
+    // Fern central vein
+    wedgeMarkup += '<line x1="'+P(cx,cy,fR1,0).x+'" y1="'+P(cx,cy,fR1,0).y+'" x2="'+fTip.x+'" y2="'+fTip.y+'" stroke="'+dark+'" stroke-width="'+(sw*2)+'"/>';
+    
+    // Layer 5: Outer gothic arches overlapping
+    var oR1 = maxR * 0.75, oR2 = maxR * 0.98;
+    var oL = P(cx, cy, oR1, -360/sections*0.75);
+    var oR = P(cx, cy, oR1, 360/sections*0.75);
+    var oTip = P(cx, cy, oR2, 0);
+    var od = 'M '+oL.x+' '+oL.y+' Q '+P(cx,cy,oR1*1.1, -360/sections*0.7).x+' '+P(cx,cy,oR1*1.1, -360/sections*0.7).y+' '+oTip.x+' '+oTip.y;
+    od += ' Q '+P(cx,cy,oR1*1.1, 360/sections*0.7).x+' '+P(cx,cy,oR1*1.1, 360/sections*0.7).y+' '+oR.x+' '+oR.y+' Z';
+    
+    // Draw outer arches shifted
+    var outerWedge = '<g transform="rotate('+(360/sections*0.5)+' '+cx+' '+cy+')">';
+    outerWedge += '<path d="'+od+'" fill="'+dark+'"/>';
+    // Inner white arch
+    var ioL = P(cx, cy, oR1*1.02, -360/sections*0.6);
+    var ioR = P(cx, cy, oR1*1.02, 360/sections*0.6);
+    var ioTip = P(cx, cy, oR2*0.95, 0);
+    var iod = 'M '+ioL.x+' '+ioL.y+' Q '+P(cx,cy,oR1*1.12, -360/sections*0.5).x+' '+P(cx,cy,oR1*1.12, -360/sections*0.5).y+' '+ioTip.x+' '+ioTip.y;
+    iod += ' Q '+P(cx,cy,oR1*1.12, 360/sections*0.5).x+' '+P(cx,cy,oR1*1.12, 360/sections*0.5).y+' '+ioR.x+' '+ioR.y+' Z';
+    outerWedge += '<path d="'+iod+'" fill="'+light+'"/>';
+    outerWedge += '</g>';
+    
+    for (var s = 0; s < sections; s++){
+      var angle = s * (360/sections);
+      content += '<g transform="rotate('+angle+' '+cx+' '+cy+')">' + outerWedge + '</g>';
+    }
+    for (var s = 0; s < sections; s++){
+      var angle = s * (360/sections);
+      content += '<g transform="rotate('+angle+' '+cx+' '+cy+')">' + wedgeMarkup + '</g>';
+    }
+
+    return { 
+      content: content, sections: sections, 
+      viewBox: '0 0 '+size+' '+size, cellContent: content, cellViewBox: '0 0 '+size+' '+size
+    };
+  }
+
+  function generateExactReplica3SVG(params) {
+    var size = params.size * (params.unit === 'in' ? 96 : params.unit === 'cm' ? 37.795 : params.unit === 'mm' ? 3.7795 : 1);
+    var cx = size/2, cy = size/2;
+    var content = '<rect x="0" y="0" width="'+size+'" height="'+size+'" fill="#ffffff"/>';
+    var maxR = size * 0.45;
+    
+    // 8-fold symmetry for Lotus Swirls
+    var sections = 8;
+    var sw = Math.max(0.8, size * 0.0015);
+    var dark = '#000000';
+    var light = '#ffffff';
+    
+    // Central motif
+    var cR = maxR * 0.15;
+    content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+cR+'" fill="'+dark+'"/>';
+    content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+(cR*1.1)+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*2)+'"/>';
+    // Central dots
+    for(var d=0; d<16; d++){
+       var dp = P(cx, cy, cR*0.8, d*360/16);
+       content += '<circle cx="'+dp.x+'" cy="'+dp.y+'" r="'+(sw*1.5)+'" fill="'+light+'"/>';
+    }
+    var cw = P(cx, cy, 0, 0);
+    content += '<path d="M '+(cw.x-sw*4)+' '+cw.y+' Q '+cw.x+' '+(cw.y-sw*4)+' '+(cw.x+sw*4)+' '+cw.y+' Q '+cw.x+' '+(cw.y+sw*4)+' '+(cw.x-sw*4)+' '+cw.y+'" fill="'+light+'"/>';
+    
+    var wedgeMarkup = '';
+    
+    // Lotus petals
+    var lR1 = maxR * 0.18, lR2 = maxR * 0.35;
+    var lTip = P(cx, cy, lR2, 0);
+    var lL = P(cx, cy, lR1, -360/sections*0.4);
+    var lR = P(cx, cy, lR1, 360/sections*0.4);
+    var ld = 'M '+lL.x+' '+lL.y+' Q '+P(cx,cy,lR1*1.5, -360/sections*0.3).x+' '+P(cx,cy,lR1*1.5, -360/sections*0.3).y+' '+lTip.x+' '+lTip.y;
+    ld += ' Q '+P(cx,cy,lR1*1.5, 360/sections*0.3).x+' '+P(cx,cy,lR1*1.5, 360/sections*0.3).y+' '+lR.x+' '+lR.y+' Z';
+    wedgeMarkup += '<path d="'+ld+'" fill="'+light+'" stroke="'+dark+'" stroke-width="'+(sw*2)+'"/>';
+    
+    var ldIn = 'M '+P(cx,cy,lR1*1.1, -360/sections*0.25).x+' '+P(cx,cy,lR1*1.1, -360/sections*0.25).y;
+    ldIn += ' Q '+P(cx,cy,lR1*1.4, -360/sections*0.1).x+' '+P(cx,cy,lR1*1.4, -360/sections*0.1).y+' '+P(cx,cy,lR2*0.8, 0).x+' '+P(cx,cy,lR2*0.8, 0).y;
+    ldIn += ' Q '+P(cx,cy,lR1*1.4, 360/sections*0.1).x+' '+P(cx,cy,lR1*1.4, 360/sections*0.1).y+' '+P(cx,cy,lR1*1.1, 360/sections*0.25).x+' '+P(cx,cy,lR1*1.1, 360/sections*0.25).y+' Z';
+    wedgeMarkup += '<path d="'+ldIn+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*1.5)+'"/>';
+    
+    // Swirls and thick striped leaves
+    var sR1 = maxR * 0.35, sR2 = maxR * 0.65;
+    var leafWedge = '<g transform="rotate('+(360/sections*0.5)+' '+cx+' '+cy+')">';
+    var slL = P(cx, cy, sR1, -360/sections*0.3);
+    var slR = P(cx, cy, sR1, 360/sections*0.3);
+    var slTip = P(cx, cy, sR2, 0);
+    var sld = 'M '+slL.x+' '+slL.y+' Q '+P(cx,cy,sR1*1.3, -360/sections*0.4).x+' '+P(cx,cy,sR1*1.3, -360/sections*0.4).y+' '+slTip.x+' '+slTip.y;
+    sld += ' Q '+P(cx,cy,sR1*1.3, 360/sections*0.4).x+' '+P(cx,cy,sR1*1.3, 360/sections*0.4).y+' '+slR.x+' '+slR.y+' Z';
+    leafWedge += '<path d="'+sld+'" fill="'+light+'" stroke="'+dark+'" stroke-width="'+(sw*3)+'"/>';
+    // Stripes
+    for(var st=1; st<=4; st++){
+       var stt = st/5;
+       var str = sR1 + (sR2-sR1)*stt;
+       var stA = (360/sections*0.3) * (1-stt*0.5);
+       var stL = P(cx, cy, str, -stA);
+       var stR = P(cx, cy, str, stA);
+       var stC = P(cx, cy, str*1.05, 0);
+       leafWedge += '<path d="M '+stL.x+' '+stL.y+' Q '+stC.x+' '+stC.y+' '+stR.x+' '+stR.y+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*4)+'"/>';
+    }
+    leafWedge += '</g>';
+    
+    // Large cardinal tips
+    var tR1 = maxR * 0.6, tR2 = maxR * 0.95;
+    var tipL = P(cx, cy, tR1, -360/sections*0.4);
+    var tipR = P(cx, cy, tR1, 360/sections*0.4);
+    var tipTip = P(cx, cy, tR2, 0);
+    var td = 'M '+tipL.x+' '+tipL.y+' C '+P(cx,cy,tR1*1.2, -360/sections*0.3).x+' '+P(cx,cy,tR1*1.2, -360/sections*0.3).y+' '+P(cx,cy,tR2*0.8, -360/sections*0.1).x+' '+P(cx,cy,tR2*0.8, -360/sections*0.1).y+' '+tipTip.x+' '+tipTip.y;
+    td += ' C '+P(cx,cy,tR2*0.8, 360/sections*0.1).x+' '+P(cx,cy,tR2*0.8, 360/sections*0.1).y+' '+P(cx,cy,tR1*1.2, 360/sections*0.3).x+' '+P(cx,cy,tR1*1.2, 360/sections*0.3).y+' '+tipR.x+' '+tipR.y+' Z';
+    wedgeMarkup += '<path d="'+td+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*3)+'"/>';
+    
+    // Mini lotus inside the tip
+    var mlBase = P(cx, cy, tR1*1.1, 0);
+    var mlTip = P(cx, cy, tR1*1.4, 0);
+    var mlL = P(cx, cy, tR1*1.2, -360/sections*0.15);
+    var mlR = P(cx, cy, tR1*1.2, 360/sections*0.15);
+    var mld = 'M '+mlBase.x+' '+mlBase.y+' Q '+P(cx,cy,tR1*1.3,-360/sections*0.1).x+' '+P(cx,cy,tR1*1.3,-360/sections*0.1).y+' '+mlTip.x+' '+mlTip.y;
+    mld += ' Q '+P(cx,cy,tR1*1.3,360/sections*0.1).x+' '+P(cx,cy,tR1*1.3,360/sections*0.1).y+' '+mlBase.x+' '+mlBase.y+' Z';
+    wedgeMarkup += '<path d="'+mld+'" fill="'+dark+'"/>';
+    wedgeMarkup += '<path d="M '+mlBase.x+' '+mlBase.y+' Q '+mlL.x+' '+mlL.y+' '+P(cx,cy,tR1*1.3,-360/sections*0.2).x+' '+P(cx,cy,tR1*1.3,-360/sections*0.2).y+' Z" fill="'+dark+'"/>';
+    wedgeMarkup += '<path d="M '+mlBase.x+' '+mlBase.y+' Q '+mlR.x+' '+mlR.y+' '+P(cx,cy,tR1*1.3,360/sections*0.2).x+' '+P(cx,cy,tR1*1.3,360/sections*0.2).y+' Z" fill="'+dark+'"/>';
+
+    // Top dot
+    wedgeMarkup += '<circle cx="'+P(cx,cy,tR2*1.02,0).x+'" cy="'+P(cx,cy,tR2*1.02,0).y+'" r="'+(sw*3)+'" fill="'+dark+'"/>';
+    wedgeMarkup += '<circle cx="'+P(cx,cy,tR2*1.02,0).x+'" cy="'+P(cx,cy,tR2*1.02,0).y+'" r="'+(sw*5)+'" fill="none" stroke="'+dark+'" stroke-width="'+sw+'"/>';
+    
+    for (var s = 0; s < sections; s++){
+      var angle = s * (360/sections);
+      content += '<g transform="rotate('+angle+' '+cx+' '+cy+')">' + leafWedge + '</g>';
+    }
+    for (var s = 0; s < sections; s++){
+      var angle = s * (360/sections);
+      content += '<g transform="rotate('+angle+' '+cx+' '+cy+')">' + wedgeMarkup + '</g>';
+    }
+
+    return { 
+      content: content, sections: sections, 
+      viewBox: '0 0 '+size+' '+size, cellContent: content, cellViewBox: '0 0 '+size+' '+size
+    };
+  }
+
   function pickShapeType(rng, style){
     var organic = ['petal','leaf','dot'];
     var geometric = ['diamond','arcSlice','triangleAccent'];
@@ -1364,6 +1577,12 @@
   function generateSVG(params){
     if (params.shapeStyle === 'exact-replica') {
        return generateExactReplicaSVG(params);
+    }
+    if (params.shapeStyle === 'exact-replica-2') {
+       return generateExactReplica2SVG(params);
+    }
+    if (params.shapeStyle === 'exact-replica-3') {
+       return generateExactReplica3SVG(params);
     }
     var rng = mulberry32(params.seed);
     var conversion = { px: 1, in: 96, cm: 37.795, mm: 3.7795 };
