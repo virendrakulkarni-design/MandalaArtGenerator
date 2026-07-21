@@ -479,17 +479,34 @@
       <div class="palette-grid" id="paletteGrid"></div>
     </fieldset>
 
-    <a href="virendra_mandala_pro.html" style="display:block; text-align:center; padding:10px; background:var(--primary); color:white; text-decoration:none; border-radius:6px; margin-bottom:15px; font-weight:bold;">🚀 Launch Pro Edition (Interactive & Animated)</a>
-    <div class="actions">
+    <div class="mode-toggle" style="display:flex; gap:10px; margin-bottom: 20px;">
+      <button class="btn-primary" id="btnGenMode" style="flex:1;">Generative Mode</button>
+      <button class="btn-secondary" id="btnDrawMode" style="flex:1;">Draw Mode</button>
+    </div>
+
+    <div class="actions" id="genActions">
       <button class="btn-primary" id="generateBtn">Generate new design</button>
+      <button class="btn-secondary" id="evolveBtn">Evolve Design (Mutate)</button>
+      <button class="btn-secondary" id="animateBtn">Play Breathing Animation</button>
       <button class="btn-secondary" id="downloadBtn">Download as SVG</button>
       <button class="btn-secondary" id="printBtn">Print Design</button>
+    </div>
+
+    <div class="actions" id="drawActions" style="display:none;">
+      <div style="margin-bottom:15px; color:var(--text-sec); font-size:14px;">Draw freely on the canvas. Strokes mirror instantly!</div>
+      <label>Brush Size</label>
+      <input type="range" id="brushSize" min="1" max="20" value="4">
+      <label>Brush Color</label>
+      <input type="color" id="brushColor" value="#ffaaaa" style="width:100%; height:40px; margin-bottom: 15px; border:none; background:none; cursor:pointer;">
+      <button class="btn-primary" id="clearCanvasBtn">Clear Canvas</button>
+      <button class="btn-secondary" id="downloadPngBtn">Download as PNG</button>
     </div>
   </div>
 
   <div class="stage">
-    <div class="canvas-wrap" id="canvasWrap">
-      <svg id="mandalaSvg" viewBox="0 0 560 560" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="canvas-wrap" id="canvasWrap" style="position:relative;">
+      <svg id="mandalaSvg" viewBox="0 0 560 560" xmlns="http://www.w3.org/2000/svg" style="position:absolute; top:0; left:0; width:100%; height:100%;"></svg>
+      <canvas id="drawCanvas" width="1120" height="1120" style="position:absolute; top:0; left:0; width:100%; height:100%; display:none; cursor:crosshair;"></canvas>
       <div class="cell-tooltip" id="cellTooltip">
         <h3>Basic Cell Structure</h3>
         <div class="cell-svg-wrap">
@@ -538,8 +555,19 @@
     canvasWrap: document.getElementById('canvasWrap'),
     meta: document.getElementById('metaReadout'),
     generateBtn: document.getElementById('generateBtn'),
+    evolveBtn: document.getElementById('evolveBtn'),
+    animateBtn: document.getElementById('animateBtn'),
     downloadBtn: document.getElementById('downloadBtn'),
-    printBtn: document.getElementById('printBtn')
+    printBtn: document.getElementById('printBtn'),
+    btnGenMode: document.getElementById('btnGenMode'),
+    btnDrawMode: document.getElementById('btnDrawMode'),
+    genActions: document.getElementById('genActions'),
+    drawActions: document.getElementById('drawActions'),
+    drawCanvas: document.getElementById('drawCanvas'),
+    brushSize: document.getElementById('brushSize'),
+    brushColor: document.getElementById('brushColor'),
+    clearCanvasBtn: document.getElementById('clearCanvasBtn'),
+    downloadPngBtn: document.getElementById('downloadPngBtn')
   };
 
   var UNIT_CONFIGS = {
@@ -1010,6 +1038,7 @@
       
       cellContent += wedgeMarkup;
 
+      content += '<g data-ring-idx="'+i+'" style="transform-origin: 280px 280px; transition: transform 0.1s linear;">';
       for (var s = 0; s < sections; s++){
         var angle = s * (360/sections);
         content += '<g transform="rotate('+angle+' '+cx+' '+cy+')">' + wedgeMarkup + '</g>';
@@ -1033,6 +1062,7 @@
           content += '<circle cx="'+pos.x+'" cy="'+pos.y+'" r="'+dotR+'" fill="'+dotColor+'" opacity="0.85"/>';
         }
       }
+      content += '</g>';
 
       var arcSw = size * 0.0015;
       var rVal = (params.size * (rOut / sizePx)).toFixed(2);
@@ -1248,7 +1278,150 @@
         event: true
       });
     }
+    }
     window.print(); 
+  });
+
+  // --- PRO MODE LOGIC ---
+  var isDrawMode = false;
+  var isAnimating = false;
+  var animFrameId = null;
+  var animStartTime = null;
+
+  els.btnGenMode.addEventListener('click', function(){
+    isDrawMode = false;
+    els.btnGenMode.classList.add('active');
+    els.btnGenMode.classList.replace('btn-secondary','btn-primary');
+    els.btnDrawMode.classList.remove('active');
+    els.btnDrawMode.classList.replace('btn-primary','btn-secondary');
+    els.genActions.style.display = 'block';
+    els.drawActions.style.display = 'none';
+    els.drawCanvas.style.display = 'none';
+    els.svg.style.opacity = '1';
+  });
+
+  els.btnDrawMode.addEventListener('click', function(){
+    isDrawMode = true;
+    els.btnDrawMode.classList.add('active');
+    els.btnDrawMode.classList.replace('btn-secondary','btn-primary');
+    els.btnGenMode.classList.remove('active');
+    els.btnGenMode.classList.replace('btn-primary','btn-secondary');
+    els.genActions.style.display = 'none';
+    els.drawActions.style.display = 'block';
+    els.drawCanvas.style.display = 'block';
+    // fade svg to act as grid
+    els.svg.style.opacity = '0.3';
+  });
+
+  // Interactive Drawing Canvas Logic
+  var ctx = els.drawCanvas.getContext('2d');
+  var isDrawing = false;
+  var lastPos = null;
+
+  function getMousePos(e) {
+    var rect = els.drawCanvas.getBoundingClientRect();
+    var scaleX = els.drawCanvas.width / rect.width;
+    var scaleY = els.drawCanvas.height / rect.height;
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY
+    };
+  }
+
+  els.drawCanvas.addEventListener('mousedown', function(e){ isDrawing = true; lastPos = getMousePos(e); });
+  els.drawCanvas.addEventListener('mouseup', function(){ isDrawing = false; });
+  els.drawCanvas.addEventListener('mouseout', function(){ isDrawing = false; });
+  els.drawCanvas.addEventListener('mousemove', function(e){
+    if(!isDrawing) return;
+    var pos = getMousePos(e);
+    
+    var cx = els.drawCanvas.width / 2;
+    var cy = els.drawCanvas.height / 2;
+    var params = readParams(state.seed);
+    var sections = Math.max(4, Math.floor((params.complexity/10)*24));
+    if(sections % 2 !== 0) sections++;
+    var angleStep = (Math.PI*2) / sections;
+    
+    ctx.lineWidth = parseInt(els.brushSize.value);
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = els.brushColor.value;
+
+    var r1 = Math.hypot(lastPos.x - cx, lastPos.y - cy);
+    var t1 = Math.atan2(lastPos.y - cy, lastPos.x - cx);
+    var r2 = Math.hypot(pos.x - cx, pos.y - cy);
+    var t2 = Math.atan2(pos.y - cy, pos.x - cx);
+
+    for(var i=0; i<sections; i++){
+      var tOffset = i * angleStep;
+      // Normal stroke
+      ctx.beginPath();
+      ctx.moveTo(cx + r1 * Math.cos(t1 + tOffset), cy + r1 * Math.sin(t1 + tOffset));
+      ctx.lineTo(cx + r2 * Math.cos(t2 + tOffset), cy + r2 * Math.sin(t2 + tOffset));
+      ctx.stroke();
+
+      if(params.mirror){
+        var mt1 = -t1 + tOffset*2;
+        var mt2 = -t2 + tOffset*2;
+        ctx.beginPath();
+        ctx.moveTo(cx + r1 * Math.cos(mt1), cy + r1 * Math.sin(mt1));
+        ctx.lineTo(cx + r2 * Math.cos(mt2), cy + r2 * Math.sin(mt2));
+        ctx.stroke();
+      }
+    }
+    lastPos = pos;
+  });
+
+  els.clearCanvasBtn.addEventListener('click', function(){
+    ctx.clearRect(0,0,els.drawCanvas.width, els.drawCanvas.height);
+  });
+
+  els.downloadPngBtn.addEventListener('click', function(){
+    var link = document.createElement('a');
+    link.download = 'mandala-drawn-' + Date.now() + '.png';
+    link.href = els.drawCanvas.toDataURL('image/png');
+    link.click();
+    if (window.goatcounter && window.goatcounter.count) {
+      window.goatcounter.count({ path: 'download/png', title: 'Downloaded Canvas PNG', event: true });
+    }
+  });
+
+  els.evolveBtn.addEventListener('click', function(){
+    // Slightly mutate seed without changing grid structure heavily
+    state.seed = state.seed + Math.floor(Math.random()*1000);
+    render(false, true);
+  });
+
+  function animate(time) {
+    if(!isAnimating) return;
+    if(!animStartTime) animStartTime = time;
+    var elapsed = time - animStartTime;
+    // Rotate rings slightly via CSS transform
+    var rings = document.querySelectorAll('#mandalaSvg g[data-ring-idx]');
+    rings.forEach((ring, idx) => {
+      var dir = (idx % 2 === 0) ? 1 : -1;
+      var speed = 0.02 * (idx + 1);
+      var rotation = (elapsed * speed * dir) % 360;
+      ring.setAttribute('transform', 'rotate(' + rotation + ' 280 280)');
+    });
+    // Breathe effect
+    var scale = 1 + Math.sin(elapsed / 2000) * 0.05;
+    els.svg.style.transform = 'scale(' + scale + ')';
+
+    animFrameId = requestAnimationFrame(animate);
+  }
+
+  els.animateBtn.addEventListener('click', function(){
+    isAnimating = !isAnimating;
+    if(isAnimating){
+      els.animateBtn.textContent = "Stop Breathing Animation";
+      animStartTime = null;
+      animFrameId = requestAnimationFrame(animate);
+    } else {
+      els.animateBtn.textContent = "Play Breathing Animation";
+      cancelAnimationFrame(animFrameId);
+      els.svg.style.transform = 'scale(1)';
+    }
   });
 
   buildPaletteUI();
