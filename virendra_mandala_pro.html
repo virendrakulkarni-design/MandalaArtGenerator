@@ -3,75 +3,101 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mandala Generator</title>
+<title>Mandala Generator Pro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
 <script data-goatcounter="https://mandalaartgenerator.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 <style>
   :root{
-    --bg:#12111a;
-    --surface:#1a1826;
-    --surface-2:#231f33;
-    --border:#332f48;
-    --border-soft:#292540;
-    --text:#ece8e0;
-    --text-dim:#9591a8;
-    --text-faint:#68637d;
-    --gold:#c9a227;
-    --gold-bright:#e4bf4a;
-    --violet:#8b7fd1;
-    --violet-dim:#5b5488;
-    --serif: Georgia, 'Iowan Old Style', 'Palatino Linotype', Palatino, serif;
-    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --bg: #100f14;
+    --surface: rgba(22, 20, 29, 0.65);
+    --surface-2: rgba(35, 31, 51, 0.8);
+    --border: rgba(255, 255, 255, 0.1);
+    --border-soft: rgba(255, 255, 255, 0.05);
+    --text: #ffffff;
+    --text-dim: #a09eb0;
+    --text-faint: #68637d;
+    --gold: #f2c94c;
+    --gold-bright: #f2994a;
+    --violet: #8b7fd1;
+    --violet-dim: #5b5488;
+    --serif: 'Outfit', sans-serif;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     --mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    --gradient-bg: radial-gradient(circle at 10% 20%, rgba(4,10,30,1) 0%, rgba(20,9,27,1) 100%);
   }
   [data-theme="light"] {
     --bg: #fdfdfd;
-    --surface: #ffffff;
-    --surface-2: #f0f0f0;
-    --border: #dddddd;
-    --border-soft: #eeeeee;
-    --text: #222222;
+    --surface: rgba(255, 255, 255, 0.8);
+    --surface-2: rgba(240, 240, 240, 0.9);
+    --border: rgba(0, 0, 0, 0.1);
+    --border-soft: rgba(0, 0, 0, 0.05);
+    --text: #1a1a1a;
     --text-dim: #555555;
     --text-faint: #888888;
+    --gradient-bg: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
   }
   [data-theme="professional"] {
-    --bg: #eceff1;
-    --surface: #ffffff;
-    --surface-2: #cfd8dc;
-    --border: #b0bec5;
-    --border-soft: #cfd8dc;
-    --text: #263238;
-    --text-dim: #455a64;
-    --text-faint: #607d8b;
-    --gold: #1976d2; 
-    --gold-bright: #2196f3;
-    --violet: #00796b;
-    --violet-dim: #004d40;
+    --bg: #09090b;
+    --surface: rgba(15, 15, 18, 0.7);
+    --surface-2: rgba(30, 30, 35, 0.8);
+    --border: rgba(255, 255, 255, 0.08);
+    --border-soft: rgba(255, 255, 255, 0.03);
+    --text: #f4f4f5;
+    --text-dim: #a1a1aa;
+    --text-faint: #52525b;
+    --gold: #38bdf8; 
+    --gold-bright: #7dd3fc;
+    --violet: #818cf8;
+    --violet-dim: #4f46e5;
+    --gradient-bg: radial-gradient(circle at top right, #1e1b4b 0%, #09090b 60%);
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;height:100vh;overflow:hidden;}
   body{
-    background:var(--bg);
+    background: var(--gradient-bg, var(--bg));
     color:var(--text);
     font-family:var(--sans);
+    -webkit-font-smoothing: antialiased;
   }
   .app{
-    display:grid;
-    grid-template-columns: 360px 1fr;
-    height:100vh;
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
   }
   @media (max-width: 900px){
-    .app{ grid-template-columns: 1fr; }
+    /* Optional mobile adjustments */
   }
 
-  /* ---- Rail ---- */
+  /* ---- Rail (Floating Left Panel) ---- */
   .rail{
+    position: absolute;
+    top: 24px;
+    left: 24px;
+    bottom: 24px;
+    width: 320px;
+    border-radius: 16px;
     background:var(--surface);
-    border-right:1px solid var(--border-soft);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border:1px solid var(--border);
     padding:32px 28px 40px;
     overflow-y:auto;
+    z-index: 10;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
   }
+  /* Hide scrollbar for a cleaner look */
+  .rail::-webkit-scrollbar { width: 0; background: transparent; }
+  
   @media (max-width: 900px){
-    .rail{ border-right:none; border-bottom:1px solid var(--border-soft); }
+    .rail{ 
+      top: 0; left: 0; bottom: auto; width: 100%; border-radius: 0;
+      border: none; border-bottom:1px solid var(--border); 
+      box-shadow: 0 4px 24px rgba(0,0,0,0.2); 
+      max-height: 50vh;
+    }
   }
   .brand{
     display:flex;
@@ -80,22 +106,24 @@
     margin-bottom:6px;
   }
   .brand-mark{
-    width:22px;height:22px;
+    width:24px;height:24px;
     flex:0 0 auto;
   }
   h1{
     font-family:var(--serif);
-    font-weight:400;
-    font-size:22px;
-    letter-spacing:0.01em;
+    font-weight:600;
+    font-size:24px;
+    letter-spacing:-0.02em;
     margin:0;
-    color:var(--text);
+    background: linear-gradient(135deg, var(--text) 0%, var(--text-dim) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
   .tagline{
-    font-size:12px;
+    font-size:13px;
     color:var(--text-dim);
-    margin:0 0 16px;
-    line-height:1.5;
+    margin:0 0 24px;
+    line-height:1.6;
   }
   fieldset{
     border:none;
@@ -132,28 +160,38 @@
   input[type="range"]{
     -webkit-appearance:none;
     width:100%;
-    height:3px;
+    height:4px;
     background:var(--border);
-    border-radius:2px;
+    border-radius:4px;
     outline:none;
-    margin:8px 0 2px;
+    margin:8px 0 6px;
+    transition: background 0.3s;
   }
+  input[type="range"]:hover { background: var(--text-faint); }
   input[type="range"]::-webkit-slider-thumb{
     -webkit-appearance:none;
-    width:14px;height:14px;
+    width:16px;height:16px;
     border-radius:50%;
     background:var(--gold-bright);
     border:2px solid var(--surface);
-    box-shadow:0 0 0 1px var(--gold);
+    box-shadow:0 2px 6px rgba(0,0,0,0.3), 0 0 0 1px var(--gold);
     cursor:pointer;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  input[type="range"]::-webkit-slider-thumb:hover{
+    transform: scale(1.2);
   }
   input[type="range"]::-moz-range-thumb{
-    width:14px;height:14px;
+    width:16px;height:16px;
     border-radius:50%;
     background:var(--gold-bright);
     border:2px solid var(--surface);
-    box-shadow:0 0 0 1px var(--gold);
+    box-shadow:0 2px 6px rgba(0,0,0,0.3), 0 0 0 1px var(--gold);
     cursor:pointer;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  input[type="range"]::-moz-range-thumb:hover{
+    transform: scale(1.2);
   }
   .ticks{
     display:flex;
@@ -169,31 +207,40 @@
     border:1px solid var(--border);
     color:var(--text);
     font-family:var(--sans);
+    font-weight: 500;
     font-size:13px;
-    padding:9px 10px;
-    border-radius:6px;
+    padding:10px 12px;
+    border-radius:8px;
     outline:none;
     appearance:none;
     background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0L5 6L10 0Z' fill='%239591a8'/></svg>");
     background-repeat:no-repeat;
     background-position:right 12px center;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+  }
+  select:hover {
+    border-color: var(--border-soft);
+    background-color: var(--surface);
   }
   select:focus, input[type="range"]:focus-visible{
-    outline:2px solid var(--violet);
-    outline-offset:2px;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(242, 153, 74, 0.2);
   }
   .checkbox-row{
     display:flex;
     align-items:center;
     gap:10px;
     cursor:pointer;
+    padding: 6px 0;
   }
   input[type="checkbox"]{
-    width:16px;height:16px;
+    width:18px;height:18px;
     accent-color:var(--gold);
     cursor:pointer;
+    border-radius: 4px;
   }
-  .checkbox-row label{ cursor:pointer; }
+  .checkbox-row label{ cursor:pointer; font-weight: 500; }
 
   .palette-grid{
     display:grid;
@@ -237,47 +284,107 @@
     font-family:var(--sans);
     font-size:14px;
     padding:12px 16px;
-    border-radius:7px;
+    border-radius:8px;
     cursor:pointer;
     border:1px solid transparent;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    font-weight: 600;
   }
   .btn-primary{
-    background:var(--gold);
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-bright) 100%);
     color:#1c1608;
-    font-weight:600;
-    border:1px solid var(--gold);
+    border:none;
+    box-shadow: 0 4px 12px rgba(242, 153, 74, 0.3);
   }
-  .btn-primary:hover{ background:var(--gold-bright); }
+  .btn-primary:hover{ 
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(242, 153, 74, 0.4);
+  }
+  .btn-primary:active{ transform: translateY(0); box-shadow: 0 2px 8px rgba(242, 153, 74, 0.4); }
   .btn-secondary{
-    background:transparent;
+    background:var(--surface-2);
     color:var(--text);
     border:1px solid var(--border);
   }
-  .btn-secondary:hover{ border-color:var(--violet-dim); color:var(--violet); }
-  button:focus-visible{ outline:2px solid var(--violet); outline-offset:2px; }
+  .btn-secondary:hover{ 
+    border-color:var(--gold); 
+    color:var(--gold);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+  .btn-secondary:active{ transform: translateY(0); }
+  button:focus-visible{ outline:none; box-shadow: 0 0 0 3px rgba(242, 153, 74, 0.3); }
+
+  /* Mode Toggle Segmented Control */
+  .mode-toggle {
+    display: flex;
+    gap: 0 !important;
+    background: var(--surface-2);
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 24px !important;
+    border: 1px solid var(--border);
+  }
+  .mode-toggle button {
+    flex: 1;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 13px;
+    box-shadow: none;
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+  }
+  .mode-toggle button:hover {
+    transform: none;
+    box-shadow: none;
+    color: var(--text);
+  }
+  .mode-toggle button.active {
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    border: 1px solid var(--border);
+  }
 
   /* ---- Stage ---- */
+  /* ---- Stage ---- */
   .stage{
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
     display:flex;
     align-items:center;
     justify-content:center;
-    padding:48px 24px;
-    position:relative;
-    background:
-      radial-gradient(ellipse at center, rgba(139,127,209,0.06) 0%, transparent 60%),
-      var(--bg);
+    background: transparent; /* Let body gradient show through */
+    z-index: 1;
+  }
+  .stage::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 70vh;
+    height: 70vh;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, var(--violet) 0%, transparent 60%);
+    opacity: 0.08;
+    pointer-events: none;
+    z-index: 0;
   }
   .canvas-wrap{
     position:relative;
-    width:min(80vh, 100%);
-    max-width:640px;
+    width:min(90vh, 100vw - 400px);
+    max-width:800px;
+    z-index: 1;
   }
   .canvas-wrap svg{
     width:100%;
     height:auto;
     display:block;
     border-radius:50%;
-    box-shadow:0 0 0 1px var(--border-soft), 0 40px 80px -30px rgba(0,0,0,0.6);
+    background: var(--surface);
+    box-shadow: 0 0 0 1px var(--border), 0 40px 100px -20px rgba(0,0,0,0.8), inset 0 0 40px rgba(0,0,0,0.3);
+    backdrop-filter: blur(10px);
   }
   .canvas-wrap.animate svg{
     animation: bloom 0.7s cubic-bezier(.2,.8,.3,1);
@@ -291,52 +398,56 @@
   }
   .meta{
     position:absolute;
-    bottom:-34px;
+    bottom:-40px;
     left:0; right:0;
     text-align:center;
     font-family:var(--mono);
-    font-size:11px;
+    font-size:12px;
     color:var(--text-faint);
     letter-spacing:0.04em;
   }
-  .cell-tooltip {
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -45%) scale(0.95);
   .cell-tooltip{
     position:absolute;
-    top:20px;
-    right:20px;
+    bottom:24px;
+    right:24px;
+    width: 240px;
     background:var(--surface);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
     border:1px solid var(--border);
-    border-radius:8px;
+    border-radius:12px;
     padding:16px;
-    box-shadow:0 12px 30px rgba(0,0,0,0.5);
+    box-shadow:0 12px 30px rgba(0,0,0,0.3);
     display:flex;
     flex-direction:column;
     align-items:center;
-    opacity:0;
-    pointer-events:none;
-    transition: opacity 0.3s, transform 0.3s;
     z-index:20;
-    max-width:300px;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
-  .stage:hover .cell-tooltip {
-    opacity:1;
-    transform:translateY(0);
+  .cell-tooltip:hover {
+    transform: translateY(-4px);
   }
   .actions-bar {
-    margin-top: 30px;
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    justify-content: center;
-    z-index: 10;
+    gap: 8px;
+    padding: 8px;
+    border-radius: 100px;
+    background: var(--surface);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid var(--border);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+    z-index: 20;
   }
   .actions-bar button {
-    margin-bottom: 0 !important;
+    margin: 0 !important;
     width: auto !important;
-    padding: 10px 20px;
+    padding: 12px 24px;
+    border-radius: 100px; /* pill shape for buttons in toolbar */
   }
   .cell-tooltip h3 {
     margin: 0;
@@ -397,9 +508,9 @@
     </div>
     <div class="tagline">Set the structure, pick a palette, and let it compose a symmetrical design.</div>
     
-    <div class="mode-toggle" style="display:flex; gap:10px; margin-bottom: 15px;">
-      <button class="btn-primary active" id="btnGenMode" style="flex:1;">Generative Mode</button>
-      <button class="btn-secondary" id="btnDrawMode" style="flex:1;">Draw Mode</button>
+    <div class="mode-toggle">
+      <button class="active" id="btnGenMode">Generative Mode</button>
+      <button id="btnDrawMode">Draw Mode</button>
     </div>
 
     <div id="generativeControls">
@@ -449,12 +560,7 @@
           </div>
           <input type="range" id="complexity" min="1" max="15" step="1" value="5">
         </div>
-        <div class="cell-preview" id="cellTooltip" style="margin-top:20px; text-align:center;">
-          <h3 style="margin: 0 0 10px 0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--gold); font-family: var(--sans);">Basic Cell Structure</h3>
-          <div class="cell-svg-wrap" style="width:100%; border:none; background:var(--surface-2); border-radius:8px; padding:10px;">
-            <svg id="cellSvg" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:auto; aspect-ratio:1/1;"></svg>
-          </div>
-        </div>
+
       </fieldset>
 
       <fieldset>
@@ -517,7 +623,7 @@
       <button class="btn-secondary" id="printBtn">Print</button>
     </div>
 
-    <div class="actions-bar" id="drawActions" style="display:none; align-items:center; background:var(--surface); padding: 12px 24px; border-radius:30px; border:1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
+    <div class="actions-bar" id="drawActions" style="display:none; align-items:center;">
       <div style="color:var(--text-sec); font-size:14px; white-space:nowrap;">Draw freely. Strokes mirror instantly!</div>
       <label style="margin-bottom:0;">Size</label>
       <input type="range" id="brushSize" min="1" max="20" value="4" style="width:100px; margin:0;">
@@ -527,6 +633,12 @@
       <button class="btn-secondary" id="downloadPngBtn" style="margin:0;">Download PNG</button>
     </div>
 
+    <div class="cell-tooltip" id="cellTooltip">
+      <h3>Basic Cell Structure</h3>
+      <div class="cell-svg-wrap">
+        <svg id="cellSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"></svg>
+      </div>
+    </div>
     
     <div class="meta" id="metaReadout"></div>
   </div>
@@ -1305,9 +1417,7 @@
   els.btnGenMode.addEventListener('click', function(){
     isDrawMode = false;
     els.btnGenMode.classList.add('active');
-    els.btnGenMode.classList.replace('btn-secondary','btn-primary');
     els.btnDrawMode.classList.remove('active');
-    els.btnDrawMode.classList.replace('btn-primary','btn-secondary');
     els.genActions.style.display = 'flex';
     els.generativeControls.style.display = 'block';
     els.drawActions.style.display = 'none';
@@ -1318,9 +1428,7 @@
   els.btnDrawMode.addEventListener('click', function(){
     isDrawMode = true;
     els.btnDrawMode.classList.add('active');
-    els.btnDrawMode.classList.replace('btn-secondary','btn-primary');
     els.btnGenMode.classList.remove('active');
-    els.btnGenMode.classList.replace('btn-primary','btn-secondary');
     els.genActions.style.display = 'none';
     els.generativeControls.style.display = 'none';
     els.drawActions.style.display = 'flex';
