@@ -1565,12 +1565,12 @@
     var rng = mulberry32(params.seed);
     var size = params.size * (params.unit === 'in' ? 96 : params.unit === 'cm' ? 37.795 : params.unit === 'mm' ? 3.7795 : 1);
     var cx = size/2, cy = size/2;
-    var content = '<rect x="0" y="0" width="'+size+'" height="'+size+'" fill="#ffffff"/>';
     var maxR = size * 0.45 * (0.85 + rng()*0.15); // random scale
+    var content = '';
     
-    // 8-fold symmetry for Lotus Swirls
+    // 8-fold symmetry
     var sections = 8;
-    var sw = Math.max(0.8, size * 0.0015) * (0.8 + rng()*0.4);
+    var sw = Math.max(0.8, size * 0.0015);
     var dark = '#000000';
     var light = '#ffffff';
     
@@ -1579,96 +1579,214 @@
        if (currentP) {
          dark = currentP.colors[1] || currentP.colors[0];
          light = currentP.bg;
-         content = '<rect x="0" y="0" width="'+size+'" height="'+size+'" fill="'+light+'"/>';
        }
     }
     
-    var rotLayer1 = rng() * (360/sections);
-    var rotLayer2 = rng() * (360/sections);
-    
-    // Central motif
-    var cR = maxR * 0.15;
-    content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+cR+'" fill="'+dark+'"/>';
-    content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+(cR*1.1)+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*2)+'"/>';
-    // Central dots
-    for(var d=0; d<16; d++){
-       var dp = P(cx, cy, cR*0.8, d*360/16);
-       content += '<circle cx="'+dp.x+'" cy="'+dp.y+'" r="'+(sw*1.5)+'" fill="'+light+'"/>';
-    }
-    var cw = P(cx, cy, 0, 0);
-    content += '<path d="M '+(cw.x-sw*4)+' '+cw.y+' Q '+cw.x+' '+(cw.y-sw*4)+' '+(cw.x+sw*4)+' '+cw.y+' Q '+cw.x+' '+(cw.y+sw*4)+' '+(cw.x-sw*4)+' '+cw.y+'" fill="'+light+'"/>';
-    
+    content = '<rect x="0" y="0" width="'+size+'" height="'+size+'" fill="'+light+'"/>';
     var wedgeMarkup = '';
     
-    // Lotus petals
-    var lR1 = maxR * 0.18, lR2 = maxR * 0.35;
-    var lTip = P(cx, cy, lR2, 0);
-    var lL = P(cx, cy, lR1, -360/sections*0.4);
-    var lR = P(cx, cy, lR1, 360/sections*0.4);
-    var ld = 'M '+lL.x+' '+lL.y+' Q '+P(cx,cy,lR1*1.5, -360/sections*0.3).x+' '+P(cx,cy,lR1*1.5, -360/sections*0.3).y+' '+lTip.x+' '+lTip.y;
-    ld += ' Q '+P(cx,cy,lR1*1.5, 360/sections*0.3).x+' '+P(cx,cy,lR1*1.5, 360/sections*0.3).y+' '+lR.x+' '+lR.y+' Z';
-    wedgeMarkup += '<path d="'+ld+'" fill="'+light+'" stroke="'+dark+'" stroke-width="'+(sw*2)+'"/>';
-    
-    var ldIn = 'M '+P(cx,cy,lR1*1.1, -360/sections*0.25).x+' '+P(cx,cy,lR1*1.1, -360/sections*0.25).y;
-    ldIn += ' Q '+P(cx,cy,lR1*1.4, -360/sections*0.1).x+' '+P(cx,cy,lR1*1.4, -360/sections*0.1).y+' '+P(cx,cy,lR2*0.8, 0).x+' '+P(cx,cy,lR2*0.8, 0).y;
-    ldIn += ' Q '+P(cx,cy,lR1*1.4, 360/sections*0.1).x+' '+P(cx,cy,lR1*1.4, 360/sections*0.1).y+' '+P(cx,cy,lR1*1.1, 360/sections*0.25).x+' '+P(cx,cy,lR1*1.1, 360/sections*0.25).y+' Z';
-    wedgeMarkup += '<path d="'+ldIn+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*1.5)+'"/>';
-    
-    // Swirls and thick striped leaves
-    var sR1 = maxR * 0.35, sR2 = maxR * 0.65;
-    var leafWedge = '<g transform="rotate('+(360/sections*0.5)+' '+cx+' '+cy+')">';
-    var slL = P(cx, cy, sR1, -360/sections*0.3);
-    var slR = P(cx, cy, sR1, 360/sections*0.3);
-    var slTip = P(cx, cy, sR2, 0);
-    var sld = 'M '+slL.x+' '+slL.y+' Q '+P(cx,cy,sR1*1.3, -360/sections*0.4).x+' '+P(cx,cy,sR1*1.3, -360/sections*0.4).y+' '+slTip.x+' '+slTip.y;
-    sld += ' Q '+P(cx,cy,sR1*1.3, 360/sections*0.4).x+' '+P(cx,cy,sR1*1.3, 360/sections*0.4).y+' '+slR.x+' '+slR.y+' Z';
-    leafWedge += '<path d="'+sld+'" fill="'+light+'" stroke="'+dark+'" stroke-width="'+(sw*3)+'"/>';
-    // Stripes
-    for(var st=1; st<=4; st++){
-       var stt = st/5;
-       var str = sR1 + (sR2-sR1)*stt;
-       var stA = (360/sections*0.3) * (1-stt*0.5);
-       var stL = P(cx, cy, str, -stA);
-       var stR = P(cx, cy, str, stA);
-       var stC = P(cx, cy, str*1.05, 0);
-       leafWedge += '<path d="M '+stL.x+' '+stL.y+' Q '+stC.x+' '+stC.y+' '+stR.x+' '+stR.y+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*4)+'"/>';
+    // Central core (R = 0 to 0.15)
+    var cR = maxR * 0.15;
+    content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+cR+'" fill="'+dark+'"/>';
+    // Inner white spirals
+    for(var s=0; s<sections; s++){
+       var a = s * (360/sections);
+       var rad = a*Math.PI/180;
+       var spirald = 'M '+P(cx,cy,cR*0.2,a).x+' '+P(cx,cy,cR*0.2,a).y;
+       spirald += ' Q '+P(cx,cy,cR*0.5,a+45).x+' '+P(cx,cy,cR*0.5,a+45).y;
+       spirald += ' '+P(cx,cy,cR*0.7,a-20).x+' '+P(cx,cy,cR*0.7,a-20).y;
+       content += '<path d="'+spirald+'" fill="none" stroke="'+light+'" stroke-width="'+(sw*1.5)+'"/>';
+       content += '<circle cx="'+P(cx,cy,cR*0.75,a-20).x+'" cy="'+P(cx,cy,cR*0.75,a-20).y+'" r="'+(sw)+'" fill="'+light+'"/>';
     }
-    leafWedge += '</g>';
-    
-    // Large cardinal tips
-    var tR1 = maxR * 0.6, tR2 = maxR * 0.95;
-    var tipL = P(cx, cy, tR1, -360/sections*0.4);
-    var tipR = P(cx, cy, tR1, 360/sections*0.4);
-    var tipTip = P(cx, cy, tR2, 0);
-    var td = 'M '+tipL.x+' '+tipL.y+' C '+P(cx,cy,tR1*1.2, -360/sections*0.3).x+' '+P(cx,cy,tR1*1.2, -360/sections*0.3).y+' '+P(cx,cy,tR2*0.8, -360/sections*0.1).x+' '+P(cx,cy,tR2*0.8, -360/sections*0.1).y+' '+tipTip.x+' '+tipTip.y;
-    td += ' C '+P(cx,cy,tR2*0.8, 360/sections*0.1).x+' '+P(cx,cy,tR2*0.8, 360/sections*0.1).y+' '+P(cx,cy,tR1*1.2, 360/sections*0.3).x+' '+P(cx,cy,tR1*1.2, 360/sections*0.3).y+' '+tipR.x+' '+tipR.y+' Z';
-    wedgeMarkup += '<path d="'+td+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*3)+'"/>';
-    
-    // Mini lotus inside the tip
-    var mlBase = P(cx, cy, tR1*1.1, 0);
-    var mlTip = P(cx, cy, tR1*1.4, 0);
-    var mlL = P(cx, cy, tR1*1.2, -360/sections*0.15);
-    var mlR = P(cx, cy, tR1*1.2, 360/sections*0.15);
-    var mld = 'M '+mlBase.x+' '+mlBase.y+' Q '+P(cx,cy,tR1*1.3,-360/sections*0.1).x+' '+P(cx,cy,tR1*1.3,-360/sections*0.1).y+' '+mlTip.x+' '+mlTip.y;
-    mld += ' Q '+P(cx,cy,tR1*1.3,360/sections*0.1).x+' '+P(cx,cy,tR1*1.3,360/sections*0.1).y+' '+mlBase.x+' '+mlBase.y+' Z';
-    wedgeMarkup += '<path d="'+mld+'" fill="'+dark+'"/>';
-    wedgeMarkup += '<path d="M '+mlBase.x+' '+mlBase.y+' Q '+mlL.x+' '+mlL.y+' '+P(cx,cy,tR1*1.3,-360/sections*0.2).x+' '+P(cx,cy,tR1*1.3,-360/sections*0.2).y+' Z" fill="'+dark+'"/>';
-    wedgeMarkup += '<path d="M '+mlBase.x+' '+mlBase.y+' Q '+mlR.x+' '+mlR.y+' '+P(cx,cy,tR1*1.3,360/sections*0.2).x+' '+P(cx,cy,tR1*1.3,360/sections*0.2).y+' Z" fill="'+dark+'"/>';
+    // Double ring border
+    content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+cR+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*2)+'"/>';
+    content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+(cR+sw*3)+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*2)+'"/>';
+    // Inner dots ring
+    var dotRingR = cR + sw*6;
+    content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+dotRingR+'" fill="none" stroke="'+dark+'" stroke-width="'+sw+'"/>';
+    for (var d=0; d<64; d++){
+       content += '<circle cx="'+P(cx,cy,dotRingR,d*360/64).x+'" cy="'+P(cx,cy,dotRingR,d*360/64).y+'" r="'+(sw*0.8)+'" fill="'+dark+'"/>';
+    }
+    content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+(dotRingR+sw*3)+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*2)+'"/>';
 
-    // Top dot
-    wedgeMarkup += '<circle cx="'+P(cx,cy,tR2*1.02,0).x+'" cy="'+P(cx,cy,tR2*1.02,0).y+'" r="'+(sw*3)+'" fill="'+dark+'"/>';
-    wedgeMarkup += '<circle cx="'+P(cx,cy,tR2*1.02,0).x+'" cy="'+P(cx,cy,tR2*1.02,0).y+'" r="'+(sw*5)+'" fill="none" stroke="'+dark+'" stroke-width="'+sw+'"/>';
+    // Ring 1: Lotus Petals (R = 0.2 to 0.45)
+    var pR1 = dotRingR + sw*3, pR2 = maxR * 0.45;
+    var petalWedge = '';
+    var ptL = P(cx, cy, pR1, -360/sections*0.5);
+    var ptR = P(cx, cy, pR1, 360/sections*0.5);
+    var ptTip = P(cx, cy, pR2, 0);
+    // Outer petal outline
+    var pdOuter = 'M '+ptL.x+' '+ptL.y+' Q '+P(cx,cy,pR1*1.5,-360/sections*0.45).x+' '+P(cx,cy,pR1*1.5,-360/sections*0.45).y+' '+ptTip.x+' '+ptTip.y;
+    pdOuter += ' Q '+P(cx,cy,pR1*1.5,360/sections*0.45).x+' '+P(cx,cy,pR1*1.5,360/sections*0.45).y+' '+ptR.x+' '+ptR.y+' Z';
+    petalWedge += '<path d="'+pdOuter+'" fill="'+light+'" stroke="'+dark+'" stroke-width="'+(sw*2)+'"/>';
+    // Inner petal outline
+    var ptTipIn = P(cx, cy, pR2 - sw*4, 0);
+    var ptLIn = P(cx, cy, pR1 + sw*2, -360/sections*0.4);
+    var ptRIn = P(cx, cy, pR1 + sw*2, 360/sections*0.4);
+    var pdInner = 'M '+ptLIn.x+' '+ptLIn.y+' Q '+P(cx,cy,pR1*1.4,-360/sections*0.35).x+' '+P(cx,cy,pR1*1.4,-360/sections*0.35).y+' '+ptTipIn.x+' '+ptTipIn.y;
+    pdInner += ' Q '+P(cx,cy,pR1*1.4,360/sections*0.35).x+' '+P(cx,cy,pR1*1.4,360/sections*0.35).y+' '+ptRIn.x+' '+ptRIn.y+' Z';
+    petalWedge += '<path d="'+pdInner+'" fill="none" stroke="'+dark+'" stroke-width="'+sw+'"/>';
     
+    // Internal lotus motif inside petal
+    var mBase = P(cx, cy, pR1 + sw*5, 0);
+    var mTip = P(cx, cy, pR1 + (pR2-pR1)*0.6, 0);
+    petalWedge += '<path d="M '+mBase.x+' '+mBase.y+' Q '+P(cx,cy,pR1+(pR2-pR1)*0.3,-15).x+' '+P(cx,cy,pR1+(pR2-pR1)*0.3,-15).y+' '+mTip.x+' '+mTip.y;
+    petalWedge += ' Q '+P(cx,cy,pR1+(pR2-pR1)*0.3,15).x+' '+P(cx,cy,pR1+(pR2-pR1)*0.3,15).y+' '+mBase.x+' '+mBase.y+' Z" fill="none" stroke="'+dark+'" stroke-width="'+sw+'"/>';
+    // Center teardrop
+    var tTip = P(cx, cy, pR1 + (pR2-pR1)*0.45, 0);
+    petalWedge += '<path d="M '+mBase.x+' '+mBase.y+' Q '+P(cx,cy,pR1+(pR2-pR1)*0.2,-8).x+' '+P(cx,cy,pR1+(pR2-pR1)*0.2,-8).y+' '+tTip.x+' '+tTip.y;
+    petalWedge += ' Q '+P(cx,cy,pR1+(pR2-pR1)*0.2,8).x+' '+P(cx,cy,pR1+(pR2-pR1)*0.2,8).y+' '+mBase.x+' '+mBase.y+' Z" fill="'+dark+'"/>';
+    
+    wedgeMarkup += petalWedge;
+
+    // Scalloped Border Ring between Petals and Ferns
+    var scalWedge = '';
+    var scalR = pR2;
+    var scalOutR = pR2 + sw*10;
+    var scallCount = 5;
+    for(var sc=0; sc<scallCount; sc++){
+       var angA = -360/sections*0.5 + (sc)*(360/sections/scallCount);
+       var angB = angA + (360/sections/scallCount);
+       var angC = (angA+angB)/2;
+       var pA = P(cx, cy, scalR, angA);
+       var pB = P(cx, cy, scalR, angB);
+       var pC = P(cx, cy, scalOutR, angC);
+       scalWedge += '<path d="M '+pA.x+' '+pA.y+' Q '+pC.x+' '+pC.y+' '+pB.x+' '+pB.y+'" fill="none" stroke="'+dark+'" stroke-width="'+sw+'"/>';
+       var dPt = P(cx, cy, scalR + sw*3, angC);
+       scalWedge += '<circle cx="'+dPt.x+'" cy="'+dPt.y+'" r="'+(sw)+'" fill="'+dark+'"/>';
+    }
+    wedgeMarkup += scalWedge;
+
+    // Outer boundary for scalloped region
+    var scalOuterR = scalOutR + sw*2;
+    var oA = P(cx, cy, scalOuterR, -360/sections*0.5);
+    var oB = P(cx, cy, scalOuterR, 360/sections*0.5);
+    wedgeMarkup += '<path d="M '+oA.x+' '+oA.y+' A '+scalOuterR+' '+scalOuterR+' 0 0 1 '+oB.x+' '+oB.y+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*2)+'"/>';
+    var scalOuterR2 = scalOuterR + sw*3;
+    var oA2 = P(cx, cy, scalOuterR2, -360/sections*0.5);
+    var oB2 = P(cx, cy, scalOuterR2, 360/sections*0.5);
+    wedgeMarkup += '<path d="M '+oA2.x+' '+oA2.y+' A '+scalOuterR2+' '+scalOuterR2+' 0 0 1 '+oB2.x+' '+oB2.y+'" fill="none" stroke="'+dark+'" stroke-width="'+sw+'"/>';
+
+    // Striped Fern Fronds (Angle offset by 360/sections/2)
+    var fernWedge = '<g transform="rotate('+(360/sections*0.5)+' '+cx+' '+cy+')">';
+    var fR1 = scalOuterR2;
+    var fR2 = maxR * 0.9;
+    var fL = P(cx, cy, fR1, -360/sections*0.45);
+    var fR = P(cx, cy, fR1, 360/sections*0.45);
+    var fTip = P(cx, cy, fR2, 0);
+    // Fern outline
+    var fd = 'M '+fL.x+' '+fL.y+' Q '+P(cx,cy,fR1+(fR2-fR1)*0.2,-360/sections*0.5).x+' '+P(cx,cy,fR1+(fR2-fR1)*0.2,-360/sections*0.5).y+' '+fTip.x+' '+fTip.y;
+    fd += ' Q '+P(cx,cy,fR1+(fR2-fR1)*0.2,360/sections*0.5).x+' '+P(cx,cy,fR1+(fR2-fR1)*0.2,360/sections*0.5).y+' '+fR.x+' '+fR.y+' Z';
+    fernWedge += '<path d="'+fd+'" fill="'+light+'" stroke="'+dark+'" stroke-width="'+(sw*2)+'"/>';
+    // Zebra Stripes
+    var numStripes = 8;
+    for(var st=1; st<=numStripes; st++){
+       var t1 = (st-0.5)/numStripes;
+       var t2 = st/numStripes;
+       var sr1 = fR1 + (fR2-fR1)*t1;
+       var sr2 = fR1 + (fR2-fR1)*t2;
+       var angMax = (360/sections*0.45) * (1 - t1);
+       
+       var stL1 = P(cx, cy, sr1, -angMax);
+       var stR1 = P(cx, cy, sr1, angMax);
+       var stL2 = P(cx, cy, sr2, -angMax*0.8);
+       var stR2 = P(cx, cy, sr2, angMax*0.8);
+       
+       var sd = 'M '+stL1.x+' '+stL1.y+' Q '+P(cx,cy,sr1*1.05,0).x+' '+P(cx,cy,sr1*1.05,0).y+' '+stR1.x+' '+stR1.y;
+       sd += ' L '+stR2.x+' '+stR2.y+' Q '+P(cx,cy,sr2*1.05,0).x+' '+P(cx,cy,sr2*1.05,0).y+' '+stL2.x+' '+stL2.y+' Z';
+       fernWedge += '<path d="'+sd+'" fill="'+dark+'"/>';
+    }
+    fernWedge += '</g>';
+    
+    // Gothic Arches (aligned with sections)
+    var gR1 = scalOuterR2;
+    var gR2 = maxR;
+    var gL = P(cx, cy, gR1, -360/sections*0.5);
+    var gR = P(cx, cy, gR1, 360/sections*0.5);
+    var gTip = P(cx, cy, gR2, 0);
+    // Outer arch
+    var gd = 'M '+gL.x+' '+gL.y+' C '+P(cx,cy,gR1*1.3,-360/sections*0.5).x+' '+P(cx,cy,gR1*1.3,-360/sections*0.5).y+' '+P(cx,cy,gR2*0.8,-360/sections*0.1).x+' '+P(cx,cy,gR2*0.8,-360/sections*0.1).y+' '+gTip.x+' '+gTip.y;
+    gd += ' C '+P(cx,cy,gR2*0.8,360/sections*0.1).x+' '+P(cx,cy,gR2*0.8,360/sections*0.1).y+' '+P(cx,cy,gR1*1.3,360/sections*0.5).x+' '+P(cx,cy,gR1*1.3,360/sections*0.5).y+' '+gR.x+' '+gR.y+' Z';
+    wedgeMarkup += '<path d="'+gd+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*2)+'"/>';
+    
+    // Inner arch
+    var gTipIn = P(cx, cy, gR2 - sw*6, 0);
+    var gdIn = 'M '+gL.x+' '+gL.y+' C '+P(cx,cy,gR1*1.3,-360/sections*0.4).x+' '+P(cx,cy,gR1*1.3,-360/sections*0.4).y+' '+P(cx,cy,gR2*0.75,-360/sections*0.1).x+' '+P(cx,cy,gR2*0.75,-360/sections*0.1).y+' '+gTipIn.x+' '+gTipIn.y;
+    gdIn += ' C '+P(cx,cy,gR2*0.75,360/sections*0.1).x+' '+P(cx,cy,gR2*0.75,360/sections*0.1).y+' '+P(cx,cy,gR1*1.3,360/sections*0.4).x+' '+P(cx,cy,gR1*1.3,360/sections*0.4).y+' '+gR.x+' '+gR.y+' Z';
+    wedgeMarkup += '<path d="'+gdIn+'" fill="none" stroke="'+dark+'" stroke-width="'+sw+'"/>';
+
+    // Dense Stippling inside the arch
+    var stipples = '';
+    for(var sdot=0; sdot<150; sdot++){
+       var radT = Math.pow(rng(), 0.5); // favor outer edge
+       var angT = rng() * 2 - 1;
+       var dR = gR1 + (gR2 - sw*10 - gR1) * radT;
+       var dAng = (360/sections*0.45) * angT * (1-radT); 
+       var sPt = P(cx, cy, dR, dAng);
+       stipples += '<circle cx="'+sPt.x+'" cy="'+sPt.y+'" r="'+(sw*0.4)+'" fill="'+dark+'"/>';
+    }
+    wedgeMarkup += stipples;
+
+    // Arch contents: Inner lotus flower + solid black shapes
+    var aLotusBase = P(cx, cy, gR1 + sw*4, 0);
+    var aLotusTip = P(cx, cy, gR1 + (gR2-gR1)*0.3, 0);
+    var alL = P(cx, cy, gR1 + (gR2-gR1)*0.15, -360/sections*0.15);
+    var alR = P(cx, cy, gR1 + (gR2-gR1)*0.15, 360/sections*0.15);
+    
+    wedgeMarkup += '<path d="M '+aLotusBase.x+' '+aLotusBase.y+' Q '+alL.x+' '+alL.y+' '+aLotusTip.x+' '+aLotusTip.y+' Q '+alR.x+' '+alR.y+' '+aLotusBase.x+' '+aLotusBase.y+' Z" fill="'+light+'" stroke="'+dark+'" stroke-width="'+sw+'"/>';
+    
+    // Large black teardrops inside arch
+    var aTDBase = P(cx, cy, gR1 + (gR2-gR1)*0.35, 0);
+    var aTDTip = P(cx, cy, gR2*0.8, 0);
+    var aTDL = P(cx, cy, gR1 + (gR2-gR1)*0.55, -360/sections*0.2);
+    var aTDR = P(cx, cy, gR1 + (gR2-gR1)*0.55, 360/sections*0.2);
+    wedgeMarkup += '<path d="M '+aTDBase.x+' '+aTDBase.y+' Q '+aTDL.x+' '+aTDL.y+' '+aTDTip.x+' '+aTDTip.y+' Q '+aTDR.x+' '+aTDR.y+' '+aTDBase.x+' '+aTDBase.y+' Z" fill="'+dark+'"/>';
+    // White accent in the black teardrop
+    var aTDAcBase = P(cx, cy, gR1 + (gR2-gR1)*0.4, 0);
+    var aTDAcTip = P(cx, cy, gR2*0.7, 0);
+    wedgeMarkup += '<path d="M '+aTDAcBase.x+' '+aTDAcBase.y+' Q '+P(cx,cy,gR1+(gR2-gR1)*0.55, -5).x+' '+P(cx,cy,gR1+(gR2-gR1)*0.55, -5).y+' '+aTDAcTip.x+' '+aTDAcTip.y+' Q '+P(cx,cy,gR1+(gR2-gR1)*0.55, 5).x+' '+P(cx,cy,gR1+(gR2-gR1)*0.55, 5).y+' '+aTDAcBase.x+' '+aTDAcBase.y+' Z" fill="'+light+'"/>';
+
+    // Side black petals next to teardrop
+    var bpLBase = P(cx, cy, gR1 + (gR2-gR1)*0.2, -360/sections*0.1);
+    var bpLTip = P(cx, cy, gR1 + (gR2-gR1)*0.45, -360/sections*0.25);
+    wedgeMarkup += '<path d="M '+bpLBase.x+' '+bpLBase.y+' Q '+P(cx,cy,gR1+(gR2-gR1)*0.3,-360/sections*0.3).x+' '+P(cx,cy,gR1+(gR2-gR1)*0.3,-360/sections*0.3).y+' '+bpLTip.x+' '+bpLTip.y+' Q '+P(cx,cy,gR1+(gR2-gR1)*0.4,-360/sections*0.1).x+' '+P(cx,cy,gR1+(gR2-gR1)*0.4,-360/sections*0.1).y+' '+bpLBase.x+' '+bpLBase.y+' Z" fill="'+dark+'"/>';
+    
+    var bpRBase = P(cx, cy, gR1 + (gR2-gR1)*0.2, 360/sections*0.1);
+    var bpRTip = P(cx, cy, gR1 + (gR2-gR1)*0.45, 360/sections*0.25);
+    wedgeMarkup += '<path d="M '+bpRBase.x+' '+bpRBase.y+' Q '+P(cx,cy,gR1+(gR2-gR1)*0.3,360/sections*0.3).x+' '+P(cx,cy,gR1+(gR2-gR1)*0.3,360/sections*0.3).y+' '+bpRTip.x+' '+bpRTip.y+' Q '+P(cx,cy,gR1+(gR2-gR1)*0.4,360/sections*0.1).x+' '+P(cx,cy,gR1+(gR2-gR1)*0.4,360/sections*0.1).y+' '+bpRBase.x+' '+bpRBase.y+' Z" fill="'+dark+'"/>';
+    
+    // Elegant swirls bridging the arch
+    var swL1 = P(cx, cy, gR1, -360/sections*0.45);
+    var swL2 = P(cx, cy, gR1 + (gR2-gR1)*0.2, -360/sections*0.45);
+    var swL3 = P(cx, cy, gR1 + (gR2-gR1)*0.2, -360/sections*0.3);
+    wedgeMarkup += '<path d="M '+swL1.x+' '+swL1.y+' C '+P(cx,cy,gR1+(gR2-gR1)*0.1,-360/sections*0.45).x+' '+P(cx,cy,gR1+(gR2-gR1)*0.1,-360/sections*0.45).y+' '+swL2.x+' '+swL2.y+' '+swL3.x+' '+swL3.y+'" fill="none" stroke="'+dark+'" stroke-width="'+sw+'"/>';
+    wedgeMarkup += '<circle cx="'+swL3.x+'" cy="'+swL3.y+'" r="'+(sw*1.5)+'" fill="'+dark+'"/>';
+
+    var swR1 = P(cx, cy, gR1, 360/sections*0.45);
+    var swR2 = P(cx, cy, gR1 + (gR2-gR1)*0.2, 360/sections*0.45);
+    var swR3 = P(cx, cy, gR1 + (gR2-gR1)*0.2, 360/sections*0.3);
+    wedgeMarkup += '<path d="M '+swR1.x+' '+swR1.y+' C '+P(cx,cy,gR1+(gR2-gR1)*0.1,360/sections*0.45).x+' '+P(cx,cy,gR1+(gR2-gR1)*0.1,360/sections*0.45).y+' '+swR2.x+' '+swR2.y+' '+swR3.x+' '+swR3.y+'" fill="none" stroke="'+dark+'" stroke-width="'+sw+'"/>';
+    wedgeMarkup += '<circle cx="'+swR3.x+'" cy="'+swR3.y+'" r="'+(sw*1.5)+'" fill="'+dark+'"/>';
+
+    // Outer Finial on Arch tip
+    var finBase = P(cx, cy, gR2, 0);
+    var finTip = P(cx, cy, gR2 + sw*15, 0);
+    var finL = P(cx, cy, gR2 + sw*7.5, -4);
+    var finR = P(cx, cy, gR2 + sw*7.5, 4);
+    wedgeMarkup += '<path d="M '+finBase.x+' '+finBase.y+' Q '+finL.x+' '+finL.y+' '+finTip.x+' '+finTip.y+' Q '+finR.x+' '+finR.y+' '+finBase.x+' '+finBase.y+' Z" fill="'+dark+'"/>';
+    wedgeMarkup += '<circle cx="'+P(cx,cy,gR2+sw*18,0).x+'" cy="'+P(cx,cy,gR2+sw*18,0).y+'" r="'+(sw*2.5)+'" fill="'+dark+'"/>';
+    
+    // Layering order: fern wedges first (so arches overlay them), then arches
     for (var s = 0; s < sections; s++){
-      var angle = s * (360/sections) + rotLayer2;
-      content += '<g transform="rotate('+angle+' '+cx+' '+cy+')">' + leafWedge + '</g>';
+      var angle = s * (360/sections);
+      content += '<g transform="rotate('+angle+' '+cx+' '+cy+')">' + fernWedge + '</g>';
     }
     for (var s = 0; s < sections; s++){
-      var angle = s * (360/sections) + rotLayer1;
+      var angle = s * (360/sections);
       content += '<g transform="rotate('+angle+' '+cx+' '+cy+')">' + wedgeMarkup + '</g>';
     }
 
-    // Calculate cell bounding box and grid
+    // Cell Preview
     var wedgeHalf = 180 / sections;
     var wedgeHalfRad = wedgeHalf * Math.PI / 180;
     var geomMaxY = maxR * Math.sin(wedgeHalfRad);
@@ -1696,7 +1814,7 @@
     }
     var cellViewBox = viewMinX + ' ' + viewMinY + ' ' + viewW + ' ' + viewH;
     
-    var finalCellContent = '<rect x="-1000" y="-1000" width="3000" height="3000" fill="'+light+'"/>' + cellGrid + leafWedge + wedgeMarkup;
+    var finalCellContent = '<rect x="-1000" y="-1000" width="3000" height="3000" fill="'+light+'"/>' + cellGrid + fernWedge + wedgeMarkup;
 
     return { 
       content: content, sections: sections, 
