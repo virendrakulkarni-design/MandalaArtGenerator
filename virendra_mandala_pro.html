@@ -623,7 +623,7 @@
     
     <div class="mode-toggle">
       <button class="active" id="btnGenMode">Generative Mode</button>
-      <button id="btnDrawMode">Draw Mode</button>
+      <button id="btnDrawMode">Composer Mode</button>
     </div>
 
     <div id="generativeControls">
@@ -745,6 +745,76 @@
       </fieldset>
     </div> <!-- generativeControls end -->
 
+    <div id="composerControls" style="display:none;">
+      <fieldset>
+        <div class="group-label">Composer Layers</div>
+        <div class="mode-toggle" id="composerLayerToggle" style="margin-bottom:12px !important;">
+          <button class="active" data-layer="0">Layer 1</button>
+          <button data-layer="1">Layer 2</button>
+          <button data-layer="2">Layer 3</button>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <div class="group-label">Layer Motif</div>
+        <div class="field">
+          <select id="compMotif">
+            <option value="petal" selected>Petal</option>
+            <option value="leaf">Leaf</option>
+            <option value="diamond">Diamond</option>
+            <option value="gothicArch">Gothic Arch</option>
+            <option value="scallop">Scallop</option>
+            <option value="dot">Dot</option>
+          </select>
+        </div>
+        <div class="field" style="display:flex; align-items:center; gap:8px;">
+          <label style="margin-bottom:0; font-size:12px; color:var(--text-sec); font-weight:500;">Fill Color</label>
+          <div style="position:relative; width:24px; height:24px; border-radius:50%; overflow:hidden; border:2px solid var(--surface-2); box-shadow: 0 0 0 1px var(--border);">
+            <input type="color" id="compColor" value="#f2c94c" style="position:absolute; top:-10px; left:-10px; width:44px; height:44px; border:none; background:none; cursor:pointer; padding:0;">
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <div class="group-label">Properties</div>
+        <div class="field">
+          <div class="field-row">
+            <label>Items (Count)</label>
+            <span class="readout" id="compCountReadout">12</span>
+          </div>
+          <input type="range" id="compCount" min="4" max="64" step="1" value="12">
+        </div>
+        <div class="field">
+          <div class="field-row">
+            <label>Item Scale</label>
+            <span class="readout" id="compScaleReadout">100%</span>
+          </div>
+          <input type="range" id="compScale" min="10" max="300" step="5" value="100">
+        </div>
+        <div class="field">
+          <div class="field-row">
+            <label>Item Rotation</label>
+            <span class="readout" id="compRotReadout">0°</span>
+          </div>
+          <input type="range" id="compRot" min="-180" max="180" step="1" value="0">
+        </div>
+        <div class="field">
+          <div class="field-row">
+            <label>Ring Radius</label>
+            <span class="readout" id="compRadiusReadout">30%</span>
+          </div>
+          <input type="range" id="compRadius" min="0" max="100" step="1" value="30">
+        </div>
+        <div class="field">
+          <div class="field-row">
+            <label>Ring Rotation</label>
+            <span class="readout" id="compRingRotReadout">0°</span>
+          </div>
+          <input type="range" id="compRingRot" min="-180" max="180" step="1" value="0">
+        </div>
+      </fieldset>
+    </div> <!-- composerControls end -->
+
   </div>
 
   <div class="stage">
@@ -774,19 +844,8 @@
       <button class="btn-secondary" id="printBtn">🖨 Print</button>
     </div>
 
+    <!-- Replaced draw actions with a hidden actions bar for composer if needed -->
     <div class="actions-bar" id="drawActions" style="display:none; align-items:center;">
-      <div style="display:flex; align-items:center; gap:8px; padding:0 12px; border-right:1px solid var(--border-soft);">
-        <label style="margin-bottom:0; font-size:12px; color:var(--text-sec); font-weight:500;">Size</label>
-        <input type="range" id="brushSize" min="1" max="20" value="4" style="width:80px; margin:0;">
-      </div>
-      <div style="display:flex; align-items:center; gap:8px; padding:0 12px; border-right:1px solid var(--border-soft);">
-        <label style="margin-bottom:0; font-size:12px; color:var(--text-sec); font-weight:500;">Color</label>
-        <div style="position:relative; width:24px; height:24px; border-radius:50%; overflow:hidden; border:2px solid var(--surface-2); box-shadow: 0 0 0 1px var(--border);">
-          <input type="color" id="brushColor" value="#ffaaaa" style="position:absolute; top:-10px; left:-10px; width:44px; height:44px; border:none; background:none; cursor:pointer; padding:0;">
-        </div>
-      </div>
-      <button class="btn-primary" id="clearCanvasBtn" style="margin:0;">Clear Canvas</button>
-      <button class="btn-secondary" id="downloadPngBtn" style="margin:0;">Download PNG</button>
     </div>
 
     <div class="cell-tooltip" id="cellTooltip">
@@ -858,6 +917,20 @@
     paletteGrid: document.getElementById('paletteGrid'),
     svg: document.getElementById('mandalaSvg'),
     cellTooltip: document.getElementById('cellTooltip'),
+    composerControls: document.getElementById('composerControls'),
+    composerLayerToggle: document.getElementById('composerLayerToggle'),
+    compMotif: document.getElementById('compMotif'),
+    compColor: document.getElementById('compColor'),
+    compCount: document.getElementById('compCount'),
+    compCountReadout: document.getElementById('compCountReadout'),
+    compScale: document.getElementById('compScale'),
+    compScaleReadout: document.getElementById('compScaleReadout'),
+    compRot: document.getElementById('compRot'),
+    compRotReadout: document.getElementById('compRotReadout'),
+    compRadius: document.getElementById('compRadius'),
+    compRadiusReadout: document.getElementById('compRadiusReadout'),
+    compRingRot: document.getElementById('compRingRot'),
+    compRingRotReadout: document.getElementById('compRingRotReadout'),
     cellSvg: document.getElementById('cellSvg'),
     canvasWrap: document.getElementById('canvasWrap'),
     meta: document.getElementById('metaReadout'),
@@ -899,9 +972,15 @@
   };
 
   var state = {
-    paletteIndex: 4,
+    paletteIndex: 0,
     seed: Math.floor(Math.random()*1e9),
-    activeRandomPalette: null
+    activeRandomPalette: null,
+    activeComposerLayer: 0,
+    composer: [
+      { motif: 'petal', color: '#f2c94c', count: 12, scale: 100, rot: 0, radius: 30, ringRot: 0 },
+      { motif: 'leaf', color: '#8b7fd1', count: 24, scale: 80, rot: 0, radius: 60, ringRot: 0 },
+      { motif: 'dot', color: '#e4bf4a', count: 36, scale: 30, rot: 0, radius: 90, ringRot: 0 }
+    ]
   };
 
   function mulberry32(a){
@@ -2483,8 +2562,88 @@
       ring.setAttribute('transform', 'rotate(0 280 280)');
     });
   }
+  
+  function renderComposer() {
+    var conversion = { px: 1, in: 96, cm: 37.795, mm: 3.7795 };
+    var sizePx = parseFloat(els.size.value) * conversion[els.sizeUnit.value];
+    var cx = sizePx/2, cy = sizePx/2;
+    var maxR = sizePx * 0.44; // 100% radius maps to this
+    
+    var content = '<rect x="0" y="0" width="'+sizePx+'" height="'+sizePx+'" fill="'+PALETTES[state.paletteIndex].bg+'"/>';
+    var cellContent = '';
+    
+    function p2cart(x,y,r,aDeg){ var rad = aDeg*Math.PI/180; return {x:x+r*Math.cos(rad),y:y+r*Math.sin(rad)};}
 
-  // Mode toggle: Generative ↔ Draw
+    state.composer.forEach(function(layer, idx) {
+      var r = (layer.radius / 100) * maxR;
+      var scale = layer.scale / 100;
+      var ringGroup = '<g transform="rotate('+layer.ringRot+' '+cx+' '+cy+')">';
+      
+      var baseR = maxR * 0.1 * scale; // baseline scale unit
+      
+      var motifSvg = '';
+      if (layer.motif === 'petal') {
+         motifSvg = '<path d="M '+cx+' '+cy+' C '+(cx+baseR)+' '+(cy+baseR)+' '+(cx+baseR)+' '+(cy+baseR*3)+' '+cx+' '+(cy+baseR*4)+' C '+(cx-baseR)+' '+(cy+baseR*3)+' '+(cx-baseR)+' '+(cy+baseR)+' '+cx+' '+cy+' Z" fill="'+layer.color+'"/>';
+      } else if (layer.motif === 'leaf') {
+         motifSvg = '<path d="M '+cx+' '+cy+' C '+(cx+baseR*1.5)+' '+(cy+baseR*2)+' '+(cx+baseR*0.5)+' '+(cy+baseR*4)+' '+cx+' '+(cy+baseR*5)+' C '+(cx-baseR*0.5)+' '+(cy+baseR*4)+' '+(cx-baseR*1.5)+' '+(cy+baseR*2)+' '+cx+' '+cy+' Z" fill="'+layer.color+'"/>';
+      } else if (layer.motif === 'diamond') {
+         motifSvg = '<path d="M '+cx+' '+cy+' L '+(cx+baseR)+' '+(cy+baseR*2)+' L '+cx+' '+(cy+baseR*4)+' L '+(cx-baseR)+' '+(cy+baseR*2)+' Z" fill="'+layer.color+'"/>';
+      } else if (layer.motif === 'gothicArch') {
+         motifSvg = '<path d="M '+(cx-baseR)+' '+cy+' L '+(cx+baseR)+' '+cy+' Q '+(cx+baseR)+' '+(cy+baseR*2)+' '+cx+' '+(cy+baseR*4)+' Q '+(cx-baseR)+' '+(cy+baseR*2)+' '+(cx-baseR)+' '+cy+' Z" fill="'+layer.color+'"/>';
+      } else if (layer.motif === 'scallop') {
+         motifSvg = '<path d="M '+(cx-baseR*1.5)+' '+cy+' Q '+cx+' '+(cy+baseR*3)+' '+(cx+baseR*1.5)+' '+cy+'" fill="none" stroke="'+layer.color+'" stroke-width="'+(sizePx*0.005)+'"/>';
+      } else if (layer.motif === 'dot') {
+         motifSvg = '<circle cx="'+cx+'" cy="'+cy+'" r="'+baseR+'" fill="'+layer.color+'"/>';
+      }
+
+      for (var i = 0; i < layer.count; i++) {
+        var angle = i * (360 / layer.count);
+        var pt = p2cart(cx, cy, r, angle);
+        var itemRot = angle - 90 + layer.rot; // -90 so motifs point outward radially
+        ringGroup += '<g transform="translate('+(pt.x-cx)+','+(pt.y-cy)+') rotate('+itemRot+' '+cx+' '+cy+')">' + motifSvg + '</g>';
+        
+        // Build cell preview using only the first element (angle = 0)
+        if (i === 0) {
+          cellContent += '<g transform="translate('+(pt.x-cx)+','+(pt.y-cy)+') rotate('+itemRot+' '+cx+' '+cy+')">' + motifSvg + '</g>';
+        }
+      }
+      ringGroup += '</g>';
+      content += ringGroup;
+    });
+
+    els.svg.setAttribute('viewBox', '0 0 '+sizePx+' '+sizePx);
+    els.svg.innerHTML = content;
+
+    // Cell Preview setup
+    var wedgeHalf = 15; // fixed wedge for composer preview
+    var cellGrid = '';
+    var gridColor = '#e4bf4a'; 
+    var geomMaxY = sizePx * 0.44 * Math.sin(wedgeHalf * Math.PI / 180);
+    var axisY = cy + geomMaxY + sizePx*0.06; 
+    var fontSize = sizePx * 0.018;
+    cellGrid += '<line x1="'+cx+'" y1="'+axisY+'" x2="'+(cx + sizePx * 0.44 * Math.cos(wedgeHalf*Math.PI/180) + sizePx*0.02)+'" y2="'+axisY+'" stroke="'+gridColor+'" stroke-width="'+(sizePx*0.0015)+'" opacity="0.8"/>';
+    cellGrid += '<line x1="'+cx+'" y1="'+(axisY-sizePx*0.005)+'" x2="'+cx+'" y2="'+(axisY+sizePx*0.005)+'" stroke="'+gridColor+'" stroke-width="'+(sizePx*0.0015)+'"/>';
+    cellGrid += '<text x="'+(cx + fontSize*0.2)+'" y="'+(axisY + fontSize*0.8)+'" fill="'+gridColor+'" font-family="var(--mono)" font-size="'+fontSize+'" transform="rotate(60 '+(cx + fontSize*0.2)+' '+(axisY + fontSize*0.8)+')" text-anchor="start">0 mm</text>';
+    
+    var maxTextLength = sizePx * 0.12;
+    var textDownExt = maxTextLength * Math.sin(60 * Math.PI/180);
+    var textRightExt = maxTextLength * Math.cos(60 * Math.PI/180);
+    var wedgeHalfRad = wedgeHalf * Math.PI / 180;
+    
+    var viewMinX = cx - sizePx*0.05;
+    var viewMaxX = cx + maxR * Math.cos(wedgeHalfRad) + textRightExt + sizePx*0.05;
+    var viewMinY = cy - geomMaxY - sizePx*0.05;
+    var viewMaxY = axisY + textDownExt + sizePx*0.05;
+
+    var viewW = viewMaxX - viewMinX;
+    var viewH = viewMaxY - viewMinY;
+    if (viewH < viewW * 0.4) { viewMinY -= ((viewW * 0.4) - viewH)/2; viewH = viewW * 0.4; }
+
+    els.cellSvg.setAttribute('viewBox', viewMinX + ' ' + viewMinY + ' ' + viewW + ' ' + viewH);
+    els.cellSvg.innerHTML = '<rect x="-1000" y="-1000" width="3000" height="3000" fill="'+PALETTES[state.paletteIndex].bg+'"/>' + cellGrid + cellContent;
+  }
+
+  // Mode toggle: Generative ↔ Composer
   els.btnGenMode.addEventListener('click', function(){
     isDrawMode = false;
     els.btnGenMode.classList.add('active');
@@ -2492,96 +2651,71 @@
     els.genActions.style.display = 'flex';
     els.exportActions.style.display = 'flex';
     els.generativeControls.style.display = 'block';
-    els.drawActions.style.display = 'none';
-    els.drawCanvas.style.display = 'none';
+    els.composerControls.style.display = 'none';
     els.svg.style.opacity = '1';
+    render(false, true);
   });
 
   els.btnDrawMode.addEventListener('click', function(){
-    isDrawMode = true;
+    isDrawMode = true; // reusing this flag to mean Composer Mode
     els.btnDrawMode.classList.add('active');
     els.btnGenMode.classList.remove('active');
     els.genActions.style.display = 'none';
-    els.exportActions.style.display = 'none';
+    els.exportActions.style.display = 'flex';
     els.generativeControls.style.display = 'none';
-    els.drawActions.style.display = 'flex';
-    els.drawCanvas.style.display = 'block';
-    // fade svg to act as grid
-    els.svg.style.opacity = '0.3';
+    els.composerControls.style.display = 'block';
+    els.svg.style.opacity = '1';
+    updateComposerUI();
+    renderComposer();
   });
 
-  // Interactive Drawing Canvas Logic
-  var ctx = els.drawCanvas.getContext('2d');
-  var isDrawing = false;
-  var lastPos = null;
+  // Composer Layer Toggle
+  Array.prototype.forEach.call(els.composerLayerToggle.children, function(btn) {
+    btn.addEventListener('click', function() {
+      Array.prototype.forEach.call(els.composerLayerToggle.children, function(c) { c.classList.remove('active'); });
+      btn.classList.add('active');
+      state.activeComposerLayer = parseInt(btn.getAttribute('data-layer'), 10);
+      updateComposerUI();
+    });
+  });
 
-  function getMousePos(e) {
-    var rect = els.drawCanvas.getBoundingClientRect();
-    var scaleX = els.drawCanvas.width / rect.width;
-    var scaleY = els.drawCanvas.height / rect.height;
-    return {
-      x: (e.clientX - rect.left) * scaleX,
-      y: (e.clientY - rect.top) * scaleY
-    };
+  function updateComposerUI() {
+    var layer = state.composer[state.activeComposerLayer];
+    els.compMotif.value = layer.motif;
+    els.compColor.value = layer.color;
+    els.compCount.value = layer.count;
+    els.compCountReadout.textContent = layer.count;
+    els.compScale.value = layer.scale;
+    els.compScaleReadout.textContent = layer.scale + '%';
+    els.compRot.value = layer.rot;
+    els.compRotReadout.textContent = layer.rot + '°';
+    els.compRadius.value = layer.radius;
+    els.compRadiusReadout.textContent = layer.radius + '%';
+    els.compRingRot.value = layer.ringRot;
+    els.compRingRotReadout.textContent = layer.ringRot + '°';
   }
 
-  els.drawCanvas.addEventListener('mousedown', function(e){ isDrawing = true; lastPos = getMousePos(e); });
-  els.drawCanvas.addEventListener('mouseup', function(){ isDrawing = false; });
-  els.drawCanvas.addEventListener('mouseout', function(){ isDrawing = false; });
-  els.drawCanvas.addEventListener('mousemove', function(e){
-    if(!isDrawing) return;
-    var pos = getMousePos(e);
-    
-    var cx = els.drawCanvas.width / 2;
-    var cy = els.drawCanvas.height / 2;
-    var params = readParams(state.seed);
-    var sections = Math.max(4, Math.floor((params.complexity/10)*24));
-    if(sections % 2 !== 0) sections++;
-    var angleStep = (Math.PI*2) / sections;
-    
-    ctx.lineWidth = parseInt(els.brushSize.value);
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.strokeStyle = els.brushColor.value;
+  function updateActiveComposerLayer() {
+    var layer = state.composer[state.activeComposerLayer];
+    layer.motif = els.compMotif.value;
+    layer.color = els.compColor.value;
+    layer.count = parseInt(els.compCount.value, 10);
+    layer.scale = parseInt(els.compScale.value, 10);
+    layer.rot = parseInt(els.compRot.value, 10);
+    layer.radius = parseInt(els.compRadius.value, 10);
+    layer.ringRot = parseInt(els.compRingRot.value, 10);
+    updateComposerUI();
+    renderComposer();
+  }
 
-    var r1 = Math.hypot(lastPos.x - cx, lastPos.y - cy);
-    var t1 = Math.atan2(lastPos.y - cy, lastPos.x - cx);
-    var r2 = Math.hypot(pos.x - cx, pos.y - cy);
-    var t2 = Math.atan2(pos.y - cy, pos.x - cx);
+  els.compMotif.addEventListener('change', updateActiveComposerLayer);
+  els.compColor.addEventListener('input', updateActiveComposerLayer);
+  els.compCount.addEventListener('input', updateActiveComposerLayer);
+  els.compScale.addEventListener('input', updateActiveComposerLayer);
+  els.compRot.addEventListener('input', updateActiveComposerLayer);
+  els.compRadius.addEventListener('input', updateActiveComposerLayer);
+  els.compRingRot.addEventListener('input', updateActiveComposerLayer);
 
-    for(var i=0; i<sections; i++){
-      var tOffset = i * angleStep;
-      // Normal stroke
-      ctx.beginPath();
-      ctx.moveTo(cx + r1 * Math.cos(t1 + tOffset), cy + r1 * Math.sin(t1 + tOffset));
-      ctx.lineTo(cx + r2 * Math.cos(t2 + tOffset), cy + r2 * Math.sin(t2 + tOffset));
-      ctx.stroke();
-
-      if(params.mirror){
-        var mt1 = -t1 + tOffset*2;
-        var mt2 = -t2 + tOffset*2;
-        ctx.beginPath();
-        ctx.moveTo(cx + r1 * Math.cos(mt1), cy + r1 * Math.sin(mt1));
-        ctx.lineTo(cx + r2 * Math.cos(mt2), cy + r2 * Math.sin(mt2));
-        ctx.stroke();
-      }
-    }
-    lastPos = pos;
-  });
-
-  els.clearCanvasBtn.addEventListener('click', function(){
-    ctx.clearRect(0,0,els.drawCanvas.width, els.drawCanvas.height);
-  });
-
-  els.downloadPngBtn.addEventListener('click', function(){
-    var link = document.createElement('a');
-    link.download = 'mandala-drawn-' + Date.now() + '.png';
-    link.href = els.drawCanvas.toDataURL('image/png');
-    link.click();
-    if (window.goatcounter && window.goatcounter.count) {
-      window.goatcounter.count({ path: 'download/png', title: 'Downloaded Canvas PNG', event: true });
-    }
-  });
 
   els.evolveBtn.addEventListener('click', function(){
     // Slightly mutate seed without changing grid structure heavily
