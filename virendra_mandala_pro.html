@@ -305,9 +305,8 @@
     transform: translate(-50%, -45%) scale(0.95);
   .cell-tooltip{
     position:absolute;
-    bottom:20px;
-    left:50%;
-    transform:translateX(-50%);
+    top:20px;
+    right:20px;
     background:var(--surface);
     border:1px solid var(--border);
     border-radius:8px;
@@ -322,9 +321,22 @@
     z-index:20;
     max-width:300px;
   }
-  .canvas-wrap:hover .cell-tooltip {
+  .stage:hover .cell-tooltip {
     opacity:1;
-    transform:translate(-50%, -5px);
+    transform:translateY(0);
+  }
+  .actions-bar {
+    margin-top: 30px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+    z-index: 10;
+  }
+  .actions-bar button {
+    margin-bottom: 0 !important;
+    width: auto !important;
+    padding: 10px 20px;
   }
   .cell-tooltip h3 {
     margin: 0;
@@ -481,23 +493,6 @@
       </fieldset>
     </div> <!-- generativeControls end -->
 
-    <div class="actions" id="genActions">
-      <button class="btn-primary" id="generateBtn">Generate new design</button>
-      <button class="btn-secondary" id="evolveBtn">Evolve Design (Mutate)</button>
-      <button class="btn-secondary" id="animateBtn">Play Breathing Animation</button>
-      <button class="btn-secondary" id="downloadBtn">Download as SVG</button>
-      <button class="btn-secondary" id="printBtn">Print Design</button>
-    </div>
-
-    <div class="actions" id="drawActions" style="display:none;">
-      <div style="margin-bottom:15px; color:var(--text-sec); font-size:14px;">Draw freely on the canvas. Strokes mirror instantly!</div>
-      <label>Brush Size</label>
-      <input type="range" id="brushSize" min="1" max="20" value="4">
-      <label>Brush Color</label>
-      <input type="color" id="brushColor" value="#ffaaaa" style="width:100%; height:40px; margin-bottom: 15px; border:none; background:none; cursor:pointer;">
-      <button class="btn-primary" id="clearCanvasBtn">Clear Canvas</button>
-      <button class="btn-secondary" id="downloadPngBtn">Download as PNG</button>
-    </div>
   </div>
 
   <div class="stage">
@@ -506,14 +501,33 @@
         <svg id="mandalaSvg" viewBox="0 0 560 560" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%; display:block; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3)); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);"></svg>
         <canvas id="drawCanvas" width="1120" height="1120" style="position:absolute; top:0; left:0; width:100%; height:100%; display:none; cursor:crosshair;"></canvas>
       </div>
-      <div class="cell-tooltip" id="cellTooltip">
-        <h3>Basic Cell Structure</h3>
-        <div class="cell-svg-wrap">
-          <svg id="cellSvg" xmlns="http://www.w3.org/2000/svg"></svg>
-        </div>
-      </div>
-      <div class="meta" id="metaReadout"></div>
+    </div> <!-- end canvasWrap -->
+
+    <div class="actions-bar" id="genActions">
+      <button class="btn-primary" id="generateBtn">Generate new design</button>
+      <button class="btn-secondary" id="evolveBtn">Evolve Design (Mutate)</button>
+      <button class="btn-secondary" id="animateBtn">Play Breathing Animation</button>
+      <button class="btn-secondary" id="downloadBtn">Download SVG</button>
+      <button class="btn-secondary" id="printBtn">Print</button>
     </div>
+
+    <div class="actions-bar" id="drawActions" style="display:none; align-items:center; background:var(--surface); padding: 12px 24px; border-radius:30px; border:1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
+      <div style="color:var(--text-sec); font-size:14px; white-space:nowrap;">Draw freely. Strokes mirror instantly!</div>
+      <label style="margin-bottom:0;">Size</label>
+      <input type="range" id="brushSize" min="1" max="20" value="4" style="width:100px; margin:0;">
+      <label style="margin-bottom:0;">Color</label>
+      <input type="color" id="brushColor" value="#ffaaaa" style="width:30px; height:30px; border:none; background:none; cursor:pointer; padding:0;">
+      <button class="btn-primary" id="clearCanvasBtn" style="margin:0;">Clear Canvas</button>
+      <button class="btn-secondary" id="downloadPngBtn" style="margin:0;">Download PNG</button>
+    </div>
+
+    <div class="cell-tooltip" id="cellTooltip">
+      <h3>Basic Cell Structure</h3>
+      <div class="cell-svg-wrap">
+        <svg id="cellSvg" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+    </div>
+    <div class="meta" id="metaReadout"></div>
   </div>
 
 </div>
@@ -1293,7 +1307,7 @@
     els.btnGenMode.classList.replace('btn-secondary','btn-primary');
     els.btnDrawMode.classList.remove('active');
     els.btnDrawMode.classList.replace('btn-primary','btn-secondary');
-    els.genActions.style.display = 'block';
+    els.genActions.style.display = 'flex';
     els.generativeControls.style.display = 'block';
     els.drawActions.style.display = 'none';
     els.drawCanvas.style.display = 'none';
@@ -1308,7 +1322,7 @@
     els.btnGenMode.classList.replace('btn-primary','btn-secondary');
     els.genActions.style.display = 'none';
     els.generativeControls.style.display = 'none';
-    els.drawActions.style.display = 'block';
+    els.drawActions.style.display = 'flex';
     els.drawCanvas.style.display = 'block';
     // fade svg to act as grid
     els.svg.style.opacity = '0.3';
