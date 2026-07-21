@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mandala Generator</title>
+<style>
+  :root{
+    --bg:#12111a;
+    --surface:#1a1826;
+    --surface-2:#231f33;
+    --border:#332f48;
+    --border-soft:#292540;
+    --text:#ece8e0;
+    --text-dim:#9591a8;
+    --text-faint:#68637d;
+    --gold:#c9a227;
+    --gold-bright:#e4bf4a;
+    --violet:#8b7fd1;
+    --violet-dim:#5b5488;
+    --serif: Georgia, 'Iowan Old Style', 'Palatino Linotype', Palatino, serif;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    min-height:100vh;
+  }
+  .app{
+    display:grid;
+    grid-template-columns: 360px 1fr;
+    min-height:100vh;
+  }
+  @media (max-width: 900px){
+    .app{ grid-template-columns: 1fr; }
+  }
+
+  /* ---- Rail ---- */
+  .rail{
+    background:var(--surface);
+    border-right:1px solid var(--border-soft);
+    padding:32px 28px 40px;
+    overflow-y:auto;
+  }
+  @media (max-width: 900px){
+    .rail{ border-right:none; border-bottom:1px solid var(--border-soft); }
+  }
+  .brand{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+    margin-bottom:6px;
+  }
+  .brand-mark{
+    width:22px;height:22px;
+    flex:0 0 auto;
+  }
+  h1{
+    font-family:var(--serif);
+    font-weight:400;
+    font-size:22px;
+    letter-spacing:0.01em;
+    margin:0;
+    color:var(--text);
+  }
+  .tagline{
+    font-size:13px;
+    color:var(--text-dim);
+    margin:0 0 30px;
+    line-height:1.5;
+  }
+  fieldset{
+    border:none;
+    margin:0 0 26px;
+    padding:0;
+  }
+  .group-label{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.12em;
+    color:var(--gold);
+    margin:0 0 14px;
+    font-weight:600;
+  }
+  .field{
+    margin-bottom:16px;
+  }
+  .field:last-child{ margin-bottom:0; }
+  .field-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:6px;
+  }
+  label{
+    font-size:13px;
+    color:var(--text);
+  }
+  .readout{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--gold-bright);
+  }
+  input[type="range"]{
+    -webkit-appearance:none;
+    width:100%;
+    height:3px;
+    background:var(--border);
+    border-radius:2px;
+    outline:none;
+    margin:8px 0 2px;
+  }
+  input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:14px;height:14px;
+    border-radius:50%;
+    background:var(--gold-bright);
+    border:2px solid var(--surface);
+    box-shadow:0 0 0 1px var(--gold);
+    cursor:pointer;
+  }
+  input[type="range"]::-moz-range-thumb{
+    width:14px;height:14px;
+    border-radius:50%;
+    background:var(--gold-bright);
+    border:2px solid var(--surface);
+    box-shadow:0 0 0 1px var(--gold);
+    cursor:pointer;
+  }
+  .ticks{
+    display:flex;
+    justify-content:space-between;
+    font-family:var(--mono);
+    font-size:10px;
+    color:var(--text-faint);
+    padding:0 1px;
+  }
+  select{
+    width:100%;
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    color:var(--text);
+    font-family:var(--sans);
+    font-size:13px;
+    padding:9px 10px;
+    border-radius:6px;
+    outline:none;
+    appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0L5 6L10 0Z' fill='%239591a8'/></svg>");
+    background-repeat:no-repeat;
+    background-position:right 12px center;
+  }
+  select:focus, input[type="range"]:focus-visible{
+    outline:2px solid var(--violet);
+    outline-offset:2px;
+  }
+  .checkbox-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    cursor:pointer;
+  }
+  input[type="checkbox"]{
+    width:16px;height:16px;
+    accent-color:var(--gold);
+    cursor:pointer;
+  }
+  .checkbox-row label{ cursor:pointer; }
+
+  .palette-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:8px;
+  }
+  .palette-swatch{
+    border:1px solid var(--border);
+    background:var(--surface-2);
+    border-radius:8px;
+    padding:9px 10px;
+    cursor:pointer;
+    text-align:left;
+    font-family:var(--sans);
+    color:var(--text);
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .palette-swatch:hover{ border-color:var(--violet-dim); }
+  .palette-swatch.active{
+    border-color:var(--gold);
+    box-shadow:0 0 0 1px var(--gold);
+  }
+  .swatch-dots{ display:flex; gap:4px; }
+  .swatch-dots span{
+    width:14px;height:14px;
+    border-radius:50%;
+    display:inline-block;
+    border:1px solid rgba(255,255,255,0.15);
+  }
+  .swatch-name{ font-size:11.5px; color:var(--text-dim); }
+
+  .actions{
+    margin-top:32px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  button{
+    font-family:var(--sans);
+    font-size:14px;
+    padding:12px 16px;
+    border-radius:7px;
+    cursor:pointer;
+    border:1px solid transparent;
+  }
+  .btn-primary{
+    background:var(--gold);
+    color:#1c1608;
+    font-weight:600;
+    border:1px solid var(--gold);
+  }
+  .btn-primary:hover{ background:var(--gold-bright); }
+  .btn-secondary{
+    background:transparent;
+    color:var(--text);
+    border:1px solid var(--border);
+  }
+  .btn-secondary:hover{ border-color:var(--violet-dim); color:var(--violet); }
+  button:focus-visible{ outline:2px solid var(--violet); outline-offset:2px; }
+
+  /* ---- Stage ---- */
+  .stage{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:48px 24px;
+    position:relative;
+    background:
+      radial-gradient(ellipse at center, rgba(139,127,209,0.06) 0%, transparent 60%),
+      var(--bg);
+  }
+  .canvas-wrap{
+    position:relative;
+    width:min(80vh, 100%);
+    max-width:640px;
+  }
+  .canvas-wrap svg{
+    width:100%;
+    height:auto;
+    display:block;
+    border-radius:50%;
+    box-shadow:0 0 0 1px var(--border-soft), 0 40px 80px -30px rgba(0,0,0,0.6);
+  }
+  .canvas-wrap.animate svg{
+    animation: bloom 0.7s cubic-bezier(.2,.8,.3,1);
+  }
+  @media (prefers-reduced-motion: reduce){
+    .canvas-wrap.animate svg{ animation:none; }
+  }
+  @keyframes bloom{
+    from{ opacity:0; transform:scale(0.92); }
+    to{ opacity:1; transform:scale(1); }
+  }
+  .meta{
+    position:absolute;
+    bottom:-34px;
+    left:0; right:0;
+    text-align:center;
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--text-faint);
+    letter-spacing:0.04em;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="rail">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="10.5" stroke="#c9a227" stroke-width="1"/>
+        <circle cx="12" cy="12" r="6" stroke="#8b7fd1" stroke-width="1"/>
+        <circle cx="12" cy="12" r="1.6" fill="#c9a227"/>
+      </svg>
+      <h1>Mandala generator</h1>
+    </div>
+    <p class="tagline">Set the structure, pick a palette, and let it compose a symmetrical design. Every slider redraws the same seed &mdash; shuffle for a fresh one.</p>
+
+    <fieldset>
+      <div class="group-label">Canvas</div>
+      <div class="field">
+        <div class="field-row">
+          <label for="size">Size</label>
+          <span class="readout" id="sizeReadout">560 px</span>
+        </div>
+        <input type="range" id="size" min="320" max="720" step="10" value="560">
+        <div class="ticks"><span>small</span><span>large</span></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <div class="group-label">Structure</div>
+      <div class="field">
+        <div class="field-row">
+          <label for="rings">Concentric circles</label>
+          <span class="readout" id="ringsReadout">7</span>
+        </div>
+        <input type="range" id="rings" min="3" max="14" step="1" value="7">
+        <div class="ticks"><span>3</span><span>14</span></div>
+      </div>
+      <div class="field">
+        <div class="field-row">
+          <label for="complexity">Complexity</label>
+          <span class="readout" id="complexityReadout">5 / 10</span>
+        </div>
+        <input type="range" id="complexity" min="1" max="10" step="1" value="5">
+        <div class="ticks"><span>simple</span><span>intricate</span></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <div class="group-label">Style</div>
+      <div class="field">
+        <label for="shapeStyle">Motif style</label>
+        <select id="shapeStyle">
+          <option value="organic">Organic &mdash; petals &amp; leaves</option>
+          <option value="geometric">Geometric &mdash; diamonds &amp; slices</option>
+          <option value="mixed" selected>Mixed</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="strokeStyle">Fill style</label>
+        <select id="strokeStyle">
+          <option value="filled" selected>Filled shapes</option>
+          <option value="outlined">Outlined only</option>
+          <option value="mixed">Mixed</option>
+        </select>
+      </div>
+      <div class="field">
+        <div class="checkbox-row">
+          <input type="checkbox" id="mirror" checked>
+          <label for="mirror">Mirror each section</label>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <div class="group-label">Palette</div>
+      <div class="palette-grid" id="paletteGrid"></div>
+    </fieldset>
+
+    <div class="actions">
+      <button class="btn-primary" id="generateBtn">Generate new design</button>
+      <button class="btn-secondary" id="downloadBtn">Download as SVG</button>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="canvas-wrap" id="canvasWrap">
+      <svg id="mandalaSvg" viewBox="0 0 560 560" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div class="meta" id="metaReadout"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+
+  var PALETTES = [
+    { name:'Gilded indigo', colors:['#C9A227','#8B7FD1','#E4BF4A','#5B5488'], bg:'#12111a' },
+    { name:'Sunset bloom',  colors:['#FF6B6B','#F8961E','#F9C74F','#C1447E'], bg:'#1c1018' },
+    { name:'Ocean depths',  colors:['#4EA8DE','#219EBC','#8ECAE6','#023047'], bg:'#08131a' },
+    { name:'Jewel tones',   colors:['#B5179E','#7209B7','#3A0CA3','#F72585'], bg:'#120a1e' },
+    { name:'Pastel dream',  colors:['#E79FC4','#8FC5B8','#7FA8D9','#A78FCE'], bg:'#faf7f9' },
+    { name:'Desert earth',  colors:['#DDA15E','#BC6C25','#7B8A4C','#FEFAE0'], bg:'#1a1610' },
+    { name:'Random harmony', colors:null, bg:null, random:true }
+  ];
+
+  var els = {
+    size: document.getElementById('size'),
+    sizeReadout: document.getElementById('sizeReadout'),
+    rings: document.getElementById('rings'),
+    ringsReadout: document.getElementById('ringsReadout'),
+    complexity: document.getElementById('complexity'),
+    complexityReadout: document.getElementById('complexityReadout'),
+    shapeStyle: document.getElementById('shapeStyle'),
+    strokeStyle: document.getElementById('strokeStyle'),
+    mirror: document.getElementById('mirror'),
+    paletteGrid: document.getElementById('paletteGrid'),
+    svg: document.getElementById('mandalaSvg'),
+    canvasWrap: document.getElementById('canvasWrap'),
+    meta: document.getElementById('metaReadout'),
+    generateBtn: document.getElementById('generateBtn'),
+    downloadBtn: document.getElementById('downloadBtn')
+  };
+
+  var state = {
+    paletteIndex: 0,
+    seed: Math.floor(Math.random()*1e9),
+    activeRandomPalette: null
+  };
+
+  function mulberry32(a){
+    return function(){
+      a |= 0; a = a + 0x6D2B79F5 | 0;
+      var t = Math.imul(a ^ a >>> 15, 1 | a);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+
+  function pick(rng, arr){ return arr[Math.floor(rng() * arr.length)]; }
+
+  function randomPalette(rng){
+    var baseHue = Math.floor(rng() * 360);
+    var schemeType = pick(rng, ['analogous','triadic','splitComplement']);
+    var hues;
+    if (schemeType === 'analogous') hues = [baseHue, (baseHue+25)%360, (baseHue+50)%360, (baseHue+335)%360];
+    else if (schemeType === 'triadic') hues = [baseHue, (baseHue+120)%360, (baseHue+240)%360, (baseHue+60)%360];
+    else hues = [baseHue, (baseHue+150)%360, (baseHue+210)%360, (baseHue+30)%360];
+    var colors = hues.map(function(h){ return 'hsl(' + h + ' 62% 56%)'; });
+    var dark = rng() > 0.25;
+    var bg = dark ? ('hsl(' + baseHue + ' 32% 8%)') : ('hsl(' + baseHue + ' 45% 96%)');
+    return { colors: colors, bg: bg };
+  }
+
+  function P(cx, cy, r, angleDeg){
+    var rad = angleDeg * Math.PI / 180;
+    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+  }
+
+  function shapePath(d, color, filled, strokeWidth){
+    if (filled) return '<path d="' + d + '" fill="' + color + '" stroke="none"/>';
+    return '<path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="' + strokeWidth + '"/>';
+  }
+
+  function buildShape(type, cx, cy, rIn, rOut, spread, color, filled, sw){
+    var tip, base, left, right, c1, c2, mid, r, oL, oR, iL, iR, d;
+    switch(type){
+      case 'petal':
+        tip = P(cx,cy,rOut,0);
+        left = P(cx,cy,rIn,-spread);
+        right = P(cx,cy,rIn,spread);
+        c1 = P(cx,cy, rIn + (rOut-rIn)*0.62, -spread*0.55);
+        c2 = P(cx,cy, rIn + (rOut-rIn)*0.62, spread*0.55);
+        d = 'M '+left.x+' '+left.y+' Q '+c1.x+' '+c1.y+' '+tip.x+' '+tip.y+' Q '+c2.x+' '+c2.y+' '+right.x+' '+right.y+' A '+rIn+' '+rIn+' 0 0 0 '+left.x+' '+left.y+' Z';
+        return shapePath(d, color, filled, sw);
+      case 'leaf':
+        tip = P(cx,cy,rOut,0);
+        left = P(cx,cy,rIn,-spread*0.5);
+        right = P(cx,cy,rIn,spread*0.5);
+        c1 = P(cx,cy, rIn + (rOut-rIn)*0.7, -spread*0.3);
+        c2 = P(cx,cy, rIn + (rOut-rIn)*0.7, spread*0.3);
+        d = 'M '+left.x+' '+left.y+' Q '+c1.x+' '+c1.y+' '+tip.x+' '+tip.y+' Q '+c2.x+' '+c2.y+' '+right.x+' '+right.y+' A '+rIn+' '+rIn+' 0 0 0 '+left.x+' '+left.y+' Z';
+        return shapePath(d, color, filled, sw);
+      case 'diamond':
+        tip = P(cx,cy,rOut,0);
+        base = P(cx,cy,rIn,0);
+        left = P(cx,cy,(rIn+rOut)/2,-spread);
+        right = P(cx,cy,(rIn+rOut)/2,spread);
+        d = 'M '+base.x+' '+base.y+' L '+left.x+' '+left.y+' L '+tip.x+' '+tip.y+' L '+right.x+' '+right.y+' Z';
+        return shapePath(d, color, filled, sw);
+      case 'arcSlice':
+        oL = P(cx,cy,rOut,-spread); oR = P(cx,cy,rOut,spread);
+        iR = P(cx,cy,rIn,spread); iL = P(cx,cy,rIn,-spread);
+        d = 'M '+oL.x+' '+oL.y+' A '+rOut+' '+rOut+' 0 0 1 '+oR.x+' '+oR.y+' L '+iR.x+' '+iR.y+' A '+rIn+' '+rIn+' 0 0 0 '+iL.x+' '+iL.y+' Z';
+        return shapePath(d, color, filled, sw);
+      case 'triangleAccent':
+        base = P(cx,cy,rIn, spread*0.85);
+        tip = P(cx,cy,rOut, spread*0.85);
+        left = P(cx,cy,(rIn+rOut)/2, -spread*0.15);
+        d = 'M '+base.x+' '+base.y+' L '+tip.x+' '+tip.y+' L '+left.x+' '+left.y+' Z';
+        return shapePath(d, color, filled, sw);
+      case 'dot':
+        mid = P(cx,cy,(rIn+rOut)/2,0);
+        r = (rOut-rIn)*0.32;
+        if (filled) return '<circle cx="'+mid.x+'" cy="'+mid.y+'" r="'+r+'" fill="'+color+'"/>';
+        return '<circle cx="'+mid.x+'" cy="'+mid.y+'" r="'+r+'" fill="none" stroke="'+color+'" stroke-width="'+sw+'"/>';
+      default:
+        return '';
+    }
+  }
+
+  function pickShapeType(rng, style){
+    var organic = ['petal','leaf','dot'];
+    var geometric = ['diamond','arcSlice','triangleAccent'];
+    var pool = style === 'organic' ? organic : style === 'geometric' ? geometric : organic.concat(geometric);
+    return pick(rng, pool);
+  }
+
+  function complexityToSections(c){
+    var table = [6,8,8,10,12,12,16,16,20,24];
+    return table[Math.max(0, Math.min(9, c-1))];
+  }
+
+  function currentPalette(rng){
+    var p = PALETTES[state.paletteIndex];
+    if (p.random){
+      if (!state.activeRandomPalette) state.activeRandomPalette = randomPalette(rng);
+      return state.activeRandomPalette;
+    }
+    return p;
+  }
+
+  function generateSVG(params){
+    var rng = mulberry32(params.seed);
+    var size = params.size, cx = size/2, cy = size/2;
+    var maxR = size * 0.44;
+    var innerR = size * 0.025;
+    var numRings = params.rings;
+    var bandWidth = (maxR - innerR) / numRings;
+    var sections = complexityToSections(params.complexity);
+    var wedgeHalf = 180 / sections;
+    var palette = params.palette;
+    var colors = palette.colors;
+    var bg = palette.bg;
+
+    var content = '';
+    content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+(maxR + size*0.03)+'" fill="'+bg+'"/>';
+    content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+(maxR + size*0.015)+'" fill="none" stroke="'+colors[0]+'" stroke-width="0.75" opacity="0.5"/>';
+
+    for (var i = 0; i < numRings; i++){
+      var rIn = innerR + i*bandWidth + bandWidth*0.1;
+      var rOut = innerR + (i+1)*bandWidth - bandWidth*0.1;
+      var color = colors[i % colors.length];
+      var spread = wedgeHalf * (0.55 + rng()*0.25);
+      var shapeType = pickShapeType(rng, params.shapeStyle);
+      var filled = params.strokeStyle === 'filled' ? true : params.strokeStyle === 'outlined' ? false : rng() > 0.35;
+      var sw = Math.max(0.6, (size/560) * (2.2 - params.complexity*0.12));
+
+      var shapeMarkup = buildShape(shapeType, cx, cy, rIn, rOut, spread, color, filled, sw);
+      var wedgeMarkup = shapeMarkup;
+      if (params.mirror){
+        wedgeMarkup += '<g transform="matrix(1,0,0,-1,0,'+(2*cy)+')">' + shapeMarkup + '</g>';
+      }
+
+      for (var s = 0; s < sections; s++){
+        var angle = s * (360/sections);
+        content += '<g transform="rotate('+angle+' '+cx+' '+cy+')">' + wedgeMarkup + '</g>';
+      }
+
+      if (params.complexity > 6 && rng() > 0.45){
+        var dotColor = colors[(i+2) % colors.length];
+        var dotR = bandWidth * 0.05;
+        var dotRadius = (rIn+rOut)/2;
+        for (var s2 = 0; s2 < sections; s2++){
+          var a2 = s2*(360/sections) + (180/sections);
+          var pos = P(cx,cy,dotRadius,a2);
+          content += '<circle cx="'+pos.x+'" cy="'+pos.y+'" r="'+dotR+'" fill="'+dotColor+'" opacity="0.85"/>';
+        }
+      }
+    }
+
+    var centerColor = colors[colors.length-1];
+    content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+(innerR*1.4)+'" fill="'+centerColor+'"/>';
+    content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+(innerR*1.4)+'" fill="none" stroke="'+colors[0]+'" stroke-width="0.75"/>';
+
+    return { content: content, sections: sections, viewBox: '0 0 '+size+' '+size };
+  }
+
+  function readParams(seed){
+    var size = parseInt(els.size.value, 10);
+    var rings = parseInt(els.rings.value, 10);
+    var complexity = parseInt(els.complexity.value, 10);
+    var shapeStyle = els.shapeStyle.value;
+    var strokeStyle = els.strokeStyle.value;
+    var mirror = els.mirror.checked;
+    var rng = mulberry32(seed);
+    var palette = currentPalette(rng);
+    return {
+      size: size, rings: rings, complexity: complexity,
+      shapeStyle: shapeStyle, strokeStyle: strokeStyle, mirror: mirror,
+      palette: palette, seed: seed
+    };
+  }
+
+  function render(newSeed, animate){
+    if (newSeed) { state.seed = Math.floor(Math.random()*1e9); state.activeRandomPalette = null; }
+    var params = readParams(state.seed);
+    var result = generateSVG(params);
+
+    els.svg.setAttribute('viewBox', result.viewBox);
+    els.svg.innerHTML = result.content;
+
+    els.sizeReadout.textContent = params.size + ' px';
+    els.ringsReadout.textContent = params.rings;
+    els.complexityReadout.textContent = params.complexity + ' / 10';
+    els.meta.textContent = params.rings + ' rings \u00b7 ' + result.sections + ' sections \u00b7 ' + params.size + 'px';
+
+    if (animate){
+      els.canvasWrap.classList.remove('animate');
+      void els.canvasWrap.offsetWidth;
+      els.canvasWrap.classList.add('animate');
+    }
+  }
+
+  function buildPaletteUI(){
+    els.paletteGrid.innerHTML = '';
+    PALETTES.forEach(function(p, idx){
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'palette-swatch' + (idx === state.paletteIndex ? ' active' : '');
+      btn.setAttribute('data-idx', idx);
+
+      var dots = document.createElement('div');
+      dots.className = 'swatch-dots';
+      var swatchColors = p.random ? ['#C9A227','#8B7FD1','#4EA8DE','#F72585'] : p.colors;
+      swatchColors.forEach(function(c){
+        var d = document.createElement('span');
+        d.style.background = c;
+        dots.appendChild(d);
+      });
+
+      var name = document.createElement('div');
+      name.className = 'swatch-name';
+      name.textContent = p.name;
+
+      btn.appendChild(dots);
+      btn.appendChild(name);
+      btn.addEventListener('click', function(){
+        state.paletteIndex = idx;
+        state.activeRandomPalette = null;
+        Array.prototype.forEach.call(els.paletteGrid.children, function(c){ c.classList.remove('active'); });
+        btn.classList.add('active');
+        render(false, true);
+      });
+      els.paletteGrid.appendChild(btn);
+    });
+  }
+
+  function downloadSVG(){
+    var svgEl = els.svg;
+    var serializer = new XMLSerializer();
+    var source = serializer.serializeToString(svgEl);
+    if (!source.match(/^<svg[^>]+xmlns="http:\/\/www\.w3\.org\/2000\/svg"/)){
+      source = source.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
+    }
+    var full = '<?xml version="1.0" standalone="no"?>\r\n' + source;
+    var blob = new Blob([full], { type: 'image/svg+xml;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement('a');
+    link.href = url;
+    link.download = 'mandala-' + Date.now() + '.svg';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  }
+
+  els.size.addEventListener('input', function(){ render(false, false); });
+  els.rings.addEventListener('input', function(){ render(false, false); });
+  els.complexity.addEventListener('input', function(){ render(false, false); });
+  els.shapeStyle.addEventListener('change', function(){ render(false, true); });
+  els.strokeStyle.addEventListener('change', function(){ render(false, true); });
+  els.mirror.addEventListener('change', function(){ render(false, true); });
+  els.generateBtn.addEventListener('click', function(){ render(true, true); });
+  els.downloadBtn.addEventListener('click', downloadSVG);
+
+  buildPaletteUI();
+  render(false, true);
+
+})();
+</script>
+</body>
+</html>
