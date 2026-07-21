@@ -619,14 +619,14 @@
             <label for="rings">Rings</label>
             <span class="readout" id="ringsReadout">7</span>
           </div>
-          <input type="range" id="rings" min="3" max="20" step="1" value="7">
+          <input type="range" id="rings" min="3" max="20" step="1" value="12">
         </div>
         <div class="field">
           <div class="field-row">
             <label for="complexity">Complexity</label>
             <span class="readout" id="complexityReadout">5 / 15</span>
           </div>
-          <input type="range" id="complexity" min="1" max="15" step="1" value="5">
+          <input type="range" id="complexity" min="1" max="15" step="1" value="10">
         </div>
 
       </fieldset>
@@ -637,10 +637,11 @@
           <div style="flex:1;">
             <label for="shapeStyle" style="display:block; margin-bottom:4px;">Motif</label>
             <select id="shapeStyle">
-              <option value="organic" selected>Organic</option>
+              <option value="organic">Organic</option>
               <option value="geometric">Geometric</option>
               <option value="floral">Floral</option>
-              <option value="dot-mandala">Dot Mandala</option>
+              <option value="dot-mandala" selected>Dot Mandala</option>
+              <option value="spiral-dots">Spiral Dots</option>
               <option value="paisley">Paisley</option>
               <option value="zentangle">Zentangle</option>
               <option value="detailed-ink">Ink</option>
@@ -651,9 +652,9 @@
           <div style="flex:1;">
             <label for="strokeStyle" style="display:block; margin-bottom:4px;">Fill</label>
             <select id="strokeStyle">
-              <option value="filled">Filled</option>
+              <option value="filled" selected>Filled</option>
               <option value="outlined">Outlined</option>
-              <option value="detailed-linework" selected>Linework</option>
+              <option value="detailed-linework">Linework</option>
               <option value="stippled">Dots</option>
               <option value="mixed">Mixed</option>
             </select>
@@ -742,6 +743,12 @@
     { name:'Jewel tones',   colors:['#B5179E','#7209B7','#3A0CA3','#F72585'], bg:'#120a1e' },
     { name:'Pastel dream',  colors:['#E79FC4','#8FC5B8','#7FA8D9','#A78FCE'], bg:'#faf7f9' },
     { name:'Desert earth',  colors:['#DDA15E','#BC6C25','#7B8A4C','#FEFAE0'], bg:'#1a1610' },
+    { name:'Royal Blue', colors:['#1E90FF','#00BFFF','#4169E1','#87CEEB'], bg:'#0a0a0a' },
+    { name:'Sunset Gold', colors:['#FFD700','#FFA500','#FF8C00','#FF4500'], bg:'#0a0a0a' },
+    { name:'Turquoise Amber', colors:['#00CED1','#20B2AA','#FF8C00','#FFD700'], bg:'#0a0a0a' },
+    { name:'Rainbow Spectrum', colors:['#FF1744','#FF9100','#FFEA00','#00E676','#2979FF','#D500F9'], bg:'#0a0a0a' },
+    { name:'Neon Duo', colors:['#FF1493','#00FF7F','#FF1493','#00FF7F'], bg:'#0a0a0a' },
+    { name:'Warm Earth', colors:['#DEB887','#D2691E','#8B4513','#CD853F'], bg:'#0a0a0a' },
     { name:'Random harmony', colors:null, bg:null, random:true }
   ];
 
@@ -793,7 +800,7 @@
   };
 
   var state = {
-    paletteIndex: 0,
+    paletteIndex: 4,
     seed: Math.floor(Math.random()*1e9),
     activeRandomPalette: null
   };
@@ -1120,6 +1127,50 @@
         var f = fillCol && fillCol !== 'none' ? fillCol : 'none';
         var s = strokeCol && strokeCol !== 'none' ? strokeCol : 'none';
         return '<circle cx="'+mid.x+'" cy="'+mid.y+'" r="'+r+'" fill="'+f+'" stroke="'+s+'" stroke-width="'+sw+'"/>';
+      case 'evilEye':
+        tip = P(cx,cy,rOut,0);
+        base = P(cx,cy,rIn,0);
+        left = P(cx,cy,(rIn+rOut)/2, -spread*0.8);
+        right = P(cx,cy,(rIn+rOut)/2, spread*0.8);
+        var dEE = 'M '+base.x+' '+base.y+' Q '+left.x+' '+left.y+' '+tip.x+' '+tip.y+' Q '+right.x+' '+right.y+' '+base.x+' '+base.y+' Z';
+        var eyePath = shapePath(dEE, fillCol, strokeCol, sw);
+        var pupilR = (rOut - rIn) * 0.15;
+        var pMid = P(cx,cy,(rIn+rOut)/2,0);
+        var pupilCol = (strokeCol && strokeCol !== 'none') ? strokeCol : baseColor;
+        var pupilFill = (fillCol && fillCol !== 'none') ? bg : pupilCol;
+        var pupil = '<circle cx="'+pMid.x+'" cy="'+pMid.y+'" r="'+pupilR+'" fill="'+pupilFill+'" stroke="'+pupilCol+'" stroke-width="'+sw+'"/>';
+        var innerEye = '<circle cx="'+pMid.x+'" cy="'+pMid.y+'" r="'+(pupilR*2)+'" fill="none" stroke="'+pupilCol+'" stroke-width="'+sw+'"/>';
+        return eyePath + innerEye + pupil;
+      case 'fan':
+        oL = P(cx,cy,rOut,-spread); oR = P(cx,cy,rOut,spread);
+        iR = P(cx,cy,rIn,spread*0.3); iL = P(cx,cy,rIn,-spread*0.3);
+        var dFan = 'M '+iL.x+' '+iL.y+' L '+oL.x+' '+oL.y+' A '+rOut+' '+rOut+' 0 0 1 '+oR.x+' '+oR.y+' L '+iR.x+' '+iR.y+' Z';
+        var fanPath = shapePath(dFan, fillCol, strokeCol, sw);
+        var fLines = '';
+        var fCol = (strokeCol && strokeCol !== 'none') ? strokeCol : baseColor;
+        for (var fi = -2; fi <= 2; fi++) {
+           var fA = (fi/2) * spread * 0.8;
+           var fP = P(cx,cy,rOut,fA);
+           var fBase = P(cx,cy,rIn,fA*0.3);
+           fLines += '<line x1="'+fBase.x+'" y1="'+fBase.y+'" x2="'+fP.x+'" y2="'+fP.y+'" stroke="'+fCol+'" stroke-width="'+(sw*0.7)+'"/>';
+        }
+        return fanPath + fLines;
+      case 'teardropChain':
+        var tdMarkup = '';
+        var numDrops = 3;
+        var tColor = (strokeCol && strokeCol !== 'none') ? strokeCol : baseColor;
+        var tFill = (fillCol && fillCol !== 'none') ? fillCol : 'none';
+        for (var tdi = 0; tdi < numDrops; tdi++) {
+           var tR = rIn + ((tdi + 0.5) / numDrops) * (rOut - rIn);
+           var tSize = ((rOut - rIn) / numDrops) * 0.4;
+           var tBaseDrop = P(cx,cy,tR - tSize*0.5, 0);
+           var tTipDrop = P(cx,cy,tR + tSize, 0);
+           var tL = P(cx,cy,tR - tSize*0.2, -spread*0.4);
+           var tR2 = P(cx,cy,tR - tSize*0.2, spread*0.4);
+           var tD = 'M '+tBaseDrop.x+' '+tBaseDrop.y+' Q '+tL.x+' '+tL.y+' '+tTipDrop.x+' '+tTipDrop.y+' Q '+tR2.x+' '+tR2.y+' '+tBaseDrop.x+' '+tBaseDrop.y+' Z';
+           tdMarkup += shapePath(tD, tFill, tColor, sw);
+        }
+        return tdMarkup;
       default:
         return '';
     }
@@ -1132,8 +1183,9 @@
     var callig = ['swoosh','brushStroke'];
     var floral = ['petal','nestedPetal','leaf','scallop'];
     var dotMandala = ['dot','stippledArc','dot','dot'];
-    var paisley = ['leaf','swoosh','petal','veinedLeaf'];
-    var zentangle = ['gothicArch','diamond','arcSlice','scallop','veinedLeaf','nestedPetal','triangleAccent'];
+    var spiralDots = ['dot'];
+    var paisley = ['leaf','swoosh','petal','veinedLeaf','teardropChain'];
+    var zentangle = ['gothicArch','diamond','arcSlice','scallop','veinedLeaf','nestedPetal','triangleAccent', 'evilEye', 'fan'];
     var pool;
     if (style === 'organic') pool = organic;
     else if (style === 'geometric') pool = geometric;
@@ -1141,9 +1193,10 @@
     else if (style === 'calligraphy') pool = callig;
     else if (style === 'floral') pool = floral;
     else if (style === 'dot-mandala') pool = dotMandala;
+    else if (style === 'spiral-dots') pool = spiralDots;
     else if (style === 'paisley') pool = paisley;
     else if (style === 'zentangle') pool = zentangle;
-    else pool = organic.concat(geometric, ink, callig);
+    else pool = organic.concat(geometric, ink, callig, ['evilEye', 'fan', 'teardropChain']);
     return pick(rng, pool);
   }
 
@@ -1226,6 +1279,20 @@
     cellGrid += '<line x1="'+cx+'" y1="'+(axisY-size*0.005)+'" x2="'+cx+'" y2="'+(axisY+size*0.005)+'" stroke="'+gridColor+'" stroke-width="'+(size*0.0015)+'"/>';
     cellGrid += '<text x="'+(cx + fontSize*0.2)+'" y="'+(axisY + fontSize*0.8)+'" fill="'+gridColor+'" font-family="var(--mono)" font-size="'+fontSize+'" transform="rotate(60 '+(cx + fontSize*0.2)+' '+(axisY + fontSize*0.8)+')" text-anchor="start">0'+params.unit+'</text>';
 
+    // === GRADIENT DEFINITIONS for 3D embossed effect ===
+    var gradientDefs = '<defs>';
+    for (var gi = 0; gi < numRings; gi++) {
+      var gColor = colors[gi % colors.length];
+      // Create a radial gradient: bright center fading to darker edge
+      gradientDefs += '<radialGradient id="grad'+gi+'" cx="30%" cy="30%" r="70%" fx="30%" fy="30%">';
+      gradientDefs += '<stop offset="0%" stop-color="'+gColor+'" stop-opacity="1"/>';
+      gradientDefs += '<stop offset="70%" stop-color="'+gColor+'" stop-opacity="0.85"/>';
+      gradientDefs += '<stop offset="100%" stop-color="'+bg+'" stop-opacity="0.6"/>';
+      gradientDefs += '</radialGradient>';
+    }
+    gradientDefs += '</defs>';
+    content += gradientDefs;
+
     for (var i = 0; i < numRings; i++){
       var rIn = innerR + i*bandWidth + bandWidth*0.1;
       var rOut = innerR + (i+1)*bandWidth - bandWidth*0.1;
@@ -1233,11 +1300,15 @@
       var spread = wedgeHalf * (0.55 + rng()*0.25);
       var shapeType = pickShapeType(rng, params.shapeStyle);
       
-      var fillCol = shapeColor, strokeCol = 'none';
+      var useGradient = (params.strokeStyle === 'filled' || params.strokeStyle === 'mixed');
+      var gradUrl = 'url(#grad'+i+')';
+      
+      var fillCol = useGradient ? gradUrl : shapeColor;
+      var strokeCol = 'none';
       if (params.strokeStyle === 'outlined') {
          fillCol = 'none'; strokeCol = shapeColor;
       } else if (params.strokeStyle === 'mixed') {
-         if (rng() > 0.35) { fillCol = shapeColor; strokeCol = 'none'; }
+         if (rng() > 0.35) { fillCol = useGradient ? gradUrl : shapeColor; strokeCol = 'none'; }
          else { fillCol = 'none'; strokeCol = shapeColor; }
       } else if (params.strokeStyle === 'detailed-linework') {
          fillCol = bg; strokeCol = shapeColor; 
@@ -1267,8 +1338,12 @@
       cellContent += wedgeMarkup;
 
       content += '<g data-ring-idx="'+i+'" style="transform-origin: 280px 280px;">';
+      var rotOffset = 0;
+      if (params.shapeStyle === 'spiral-dots') {
+        rotOffset = i * (360/sections) * 0.618; // golden ratio multiplier for spiral shift
+      }
       for (var s = 0; s < sections; s++){
-        var angle = s * (360/sections);
+        var angle = s * (360/sections) + rotOffset;
         content += '<g transform="rotate('+angle+' '+cx+' '+cy+')">' + wedgeMarkup + '</g>';
       }
 
@@ -1292,6 +1367,20 @@
       }
       content += '</g>';
 
+      // === DOT BORDER RING between bands ===
+      // Add a ring of evenly-spaced dots along the outer edge of each design band
+      var dotBorderColor = '#ffffff';
+      if (bg === '#ffffff' || bg === '#faf7f9') dotBorderColor = colors[0]; // dark dots on light bg
+      var dotBorderR = Math.max(0.8, bandWidth * 0.035);
+      var dotBorderRadius = rOut + bandWidth * 0.05;
+      var dotBorderCircumference = 2 * Math.PI * dotBorderRadius;
+      var numBorderDots = Math.max(12, Math.round(dotBorderCircumference / (dotBorderR * 5)));
+      for (var bd = 0; bd < numBorderDots; bd++) {
+        var bdAngle = (bd / numBorderDots) * 360;
+        var bdPos = P(cx, cy, dotBorderRadius, bdAngle);
+        content += '<circle cx="'+bdPos.x+'" cy="'+bdPos.y+'" r="'+dotBorderR+'" fill="'+dotBorderColor+'" opacity="0.7"/>';
+      }
+
       var arcSw = size * 0.0015;
       var rVal = (params.size * (rOut / sizePx)).toFixed(2);
       var arcP1 = P(cx, cy, rOut, -wedgeHalf);
@@ -1309,6 +1398,32 @@
       var textY = axisY + fontSize*0.8;
       
       cellGrid += '<text x="'+textX+'" y="'+textY+'" fill="'+gridColor+'" font-family="var(--mono)" font-size="'+fontSize+'" transform="rotate(60 '+textX+' '+textY+')" text-anchor="start">'+rVal+params.unit+'</text>';
+    }
+
+    // === OUTER BOUNDARY DOT RING ===
+    var outerDotColor = '#ffffff';
+    if (bg === '#ffffff' || bg === '#faf7f9') outerDotColor = colors[0];
+    var outerDotR = Math.max(1, bandWidth * 0.04);
+    var outerRadius = maxR + size * 0.015;
+    var outerCirc = 2 * Math.PI * outerRadius;
+    var numOuterDots = Math.max(24, Math.round(outerCirc / (outerDotR * 4)));
+    for (var od = 0; od < numOuterDots; od++) {
+      var odAngle = (od / numOuterDots) * 360;
+      var odPos = P(cx, cy, outerRadius, odAngle);
+      content += '<circle cx="'+odPos.x+'" cy="'+odPos.y+'" r="'+outerDotR+'" fill="'+outerDotColor+'" opacity="0.8"/>';
+    }
+
+    // === INNER BOUNDARY DOT RING ===
+    var innerDotR = Math.max(0.6, bandWidth * 0.025);
+    var innerBorderRadius = innerR - bandWidth * 0.02;
+    if (innerBorderRadius > 0) {
+      var innerCirc = 2 * Math.PI * innerBorderRadius;
+      var numInnerDots = Math.max(8, Math.round(innerCirc / (innerDotR * 5)));
+      for (var id = 0; id < numInnerDots; id++) {
+        var idAngle = (id / numInnerDots) * 360;
+        var idPos = P(cx, cy, innerBorderRadius, idAngle);
+        content += '<circle cx="'+idPos.x+'" cy="'+idPos.y+'" r="'+innerDotR+'" fill="'+outerDotColor+'" opacity="0.6"/>';
+      }
     }
 
     var centerColor = colors[colors.length-1];
