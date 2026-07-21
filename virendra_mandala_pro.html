@@ -1943,32 +1943,7 @@
 
     var cellViewBox = viewMinX + ' ' + viewMinY + ' ' + viewW + ' ' + viewH;
 
-    if (params.layoutMode && params.layoutMode !== 'single') {
-       var scale = 0.22;
-       var finalContent = '<defs><g id="unit">' + content + '</g></defs>';
-       finalContent += '<rect x="0" y="0" width="'+size+'" height="'+size+'" fill="'+bg+'"/>';
-       
-       if (params.layoutMode === 'grid-square') {
-           var step = size * scale;
-           for (var x = -step; x < size + step; x += step) {
-              for (var y = -step; y < size + step; y += step) {
-                 finalContent += '<use href="#unit" transform="translate('+x+','+y+') scale('+scale+') translate(-'+cx+',-'+cy+')"/>';
-              }
-           }
-       } else if (params.layoutMode === 'grid-hex') {
-           var w = size * scale;
-           var h = w * Math.sqrt(3)/2;
-           for (var row = -2; row < (size/h) + 2; row++) {
-              var y = row * h;
-              var offset = (row % 2 !== 0) ? (w/2) : 0;
-              for (var col = -2; col < (size/w) + 2; col++) {
-                 var x = col * w + offset;
-                 finalContent += '<use href="#unit" transform="translate('+x+','+y+') scale('+scale+') translate(-'+cx+',-'+cy+')"/>';
-              }
-           }
-       }
-       content = finalContent;
-    }
+    // layoutMode tiling logic has been moved to render()
 
     return { 
       content: content, 
@@ -2004,6 +1979,37 @@
     if (newSeed) { state.seed = Math.floor(Math.random()*1e9); state.activeRandomPalette = null; }
     var params = readParams(state.seed);
     var result = generateSVG(params);
+
+    if (params.layoutMode && params.layoutMode !== 'single') {
+       var conversion = { px: 1, in: 96, cm: 37.795, mm: 3.7795 };
+       var size = params.size * conversion[params.unit];
+       var cx = size/2, cy = size/2;
+       var bg = params.palette.bg;
+       var scale = 0.22;
+       var finalContent = '<defs><g id="unit">' + result.content + '</g></defs>';
+       finalContent += '<rect x="0" y="0" width="'+size+'" height="'+size+'" fill="'+bg+'"/>';
+       
+       if (params.layoutMode === 'grid-square') {
+           var step = size * scale;
+           for (var x = -step; x < size + step; x += step) {
+              for (var y = -step; y < size + step; y += step) {
+                 finalContent += '<use href="#unit" transform="translate('+x+','+y+') scale('+scale+') translate(-'+cx+',-'+cy+')"/>';
+              }
+           }
+       } else if (params.layoutMode === 'grid-hex') {
+           var w = size * scale;
+           var h = w * Math.sqrt(3)/2;
+           for (var row = -2; row < (size/h) + 2; row++) {
+              var y = row * h;
+              var offset = (row % 2 !== 0) ? (w/2) : 0;
+              for (var col = -2; col < (size/w) + 2; col++) {
+                 var x = col * w + offset;
+                 finalContent += '<use href="#unit" transform="translate('+x+','+y+') scale('+scale+') translate(-'+cx+',-'+cy+')"/>';
+              }
+           }
+       }
+       result.content = finalContent;
+    }
 
     if (newSeed && window.goatcounter && window.goatcounter.count) {
       window.goatcounter.count({
