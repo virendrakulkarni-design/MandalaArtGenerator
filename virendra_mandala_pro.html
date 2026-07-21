@@ -681,7 +681,7 @@
               <option value="detailed-ink">Ink</option>
               <option value="calligraphy">Brush</option>
               <option value="mixed">Mixed styles</option>
-              <option value="exact-replica">Exact Replica (Vaishnavi)</option>
+              <option value="exact-replica">Exact Replica</option>
             </select>
           </div>
           <div style="flex:1;">
@@ -1971,7 +1971,36 @@
     cellGrid += '<line x1="'+cx+'" y1="'+(axisY-sizePx*0.005)+'" x2="'+cx+'" y2="'+(axisY+sizePx*0.005)+'" stroke="'+gridColor+'" stroke-width="'+(sizePx*0.0015)+'"/>';
     cellGrid += '<text x="'+(cx + fontSize*0.2)+'" y="'+(axisY + fontSize*0.8)+'" fill="'+gridColor+'" font-family="var(--mono)" font-size="'+fontSize+'" transform="rotate(60 '+(cx + fontSize*0.2)+' '+(axisY + fontSize*0.8)+')" text-anchor="start">0'+params.unit+'</text>';
 
-    return { content: content, cellContent: cellGrid + cellContent, cx: cx, cy: cy };
+    var maxTextLength = sizePx * 0.12;
+    var textDownExt = maxTextLength * Math.sin(60 * Math.PI/180);
+    var textRightExt = maxTextLength * Math.cos(60 * Math.PI/180);
+    var maxR = sizePx * 0.44;
+    var wedgeHalfRad = wedgeHalf * Math.PI / 180;
+    
+    var viewMinX = cx - sizePx*0.05;
+    var viewMaxX = cx + maxR * Math.cos(wedgeHalfRad) + textRightExt + sizePx*0.05;
+    var viewMinY = cy - geomMaxY - sizePx*0.05;
+    var viewMaxY = axisY + textDownExt + sizePx*0.05;
+
+    var viewW = viewMaxX - viewMinX;
+    var viewH = viewMaxY - viewMinY;
+    
+    if (viewH < viewW * 0.4) {
+       var diff = (viewW * 0.4) - viewH;
+       viewH += diff;
+       viewMinY -= diff/2;
+    }
+
+    var cellViewBox = viewMinX + ' ' + viewMinY + ' ' + viewW + ' ' + viewH;
+    var finalCellContent = '<rect x="-1000" y="-1000" width="3000" height="3000" fill="'+bg+'"/>' + cellGrid + cellContent;
+
+    return { 
+      content: content, 
+      sections: sections, 
+      viewBox: '0 0 '+sizePx+' '+sizePx,
+      cellContent: finalCellContent,
+      cellViewBox: cellViewBox
+    };
   }
 
   var isDrawMode = false;
