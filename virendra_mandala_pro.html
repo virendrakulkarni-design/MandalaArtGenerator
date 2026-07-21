@@ -449,6 +449,12 @@
           </div>
           <input type="range" id="complexity" min="1" max="15" step="1" value="5">
         </div>
+        <div class="cell-preview" id="cellTooltip" style="margin-top:20px; text-align:center;">
+          <h3 style="margin: 0 0 10px 0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--gold); font-family: var(--sans);">Basic Cell Structure</h3>
+          <div class="cell-svg-wrap" style="width:100%; border:none; background:var(--surface-2); border-radius:8px; padding:10px;">
+            <svg id="cellSvg" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:auto; aspect-ratio:1/1;"></svg>
+          </div>
+        </div>
       </fieldset>
 
       <fieldset>
@@ -521,12 +527,7 @@
       <button class="btn-secondary" id="downloadPngBtn" style="margin:0;">Download PNG</button>
     </div>
 
-    <div class="cell-tooltip" id="cellTooltip">
-      <h3>Basic Cell Structure</h3>
-      <div class="cell-svg-wrap">
-        <svg id="cellSvg" xmlns="http://www.w3.org/2000/svg"></svg>
-      </div>
-    </div>
+    
     <div class="meta" id="metaReadout"></div>
   </div>
 
