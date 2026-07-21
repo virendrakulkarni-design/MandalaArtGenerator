@@ -48,17 +48,16 @@
     --violet-dim: #004d40;
   }
   *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;}
+  html,body{margin:0;padding:0;height:100vh;overflow:hidden;}
   body{
     background:var(--bg);
     color:var(--text);
     font-family:var(--sans);
-    min-height:100vh;
   }
   .app{
     display:grid;
     grid-template-columns: 360px 1fr;
-    min-height:100vh;
+    height:100vh;
   }
   @media (max-width: 900px){
     .app{ grid-template-columns: 1fr; }
