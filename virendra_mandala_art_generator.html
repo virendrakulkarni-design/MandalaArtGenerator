@@ -451,6 +451,7 @@
           <option value="organic" selected>Organic &mdash; petals &amp; leaves</option>
           <option value="geometric">Geometric &mdash; diamonds &amp; slices</option>
           <option value="detailed-ink">Detailed Ink / Intricate</option>
+          <option value="calligraphy">Swooshes &amp; Brush Strokes</option>
           <option value="mixed">Mixed</option>
         </select>
       </div>
@@ -460,6 +461,7 @@
           <option value="filled">Filled shapes</option>
           <option value="outlined">Outlined only</option>
           <option value="detailed-linework" selected>Detailed Linework (B&amp;W)</option>
+          <option value="stippled">Dot Mandala (Stippled)</option>
           <option value="mixed">Mixed</option>
         </select>
       </div>
@@ -586,8 +588,154 @@
     return '<path d="' + d + '" fill="' + f + '" stroke="' + s + '" stroke-width="' + strokeWidth + '"/>';
   }
 
-  function buildShape(type, cx, cy, rIn, rOut, spread, fillCol, strokeCol, sw, baseColor){
+  function dist(p1, p2){ return Math.hypot(p2.x - p1.x, p2.y - p1.y); }
+
+  function stippledQBezier(p0, p1, p2, r1, r2, color){
+    var markup = '';
+    var len = dist(p0, p1) + dist(p1, p2);
+    if (len === 0) return '';
+    var t = 0;
+    while(t <= 1){
+      var mt = 1 - t;
+      var pt = {
+        x: mt * mt * p0.x + 2 * mt * t * p1.x + t * t * p2.x,
+        y: mt * mt * p0.y + 2 * mt * t * p1.y + t * t * p2.y
+      };
+      var currentR = r1 + (r2 - r1) * t;
+      markup += '<circle cx="'+pt.x+'" cy="'+pt.y+'" r="'+currentR+'" fill="'+color+'"/>';
+      var step = (currentR * 2 + currentR * 0.8) / len;
+      t += Math.max(0.01, step);
+    }
+    return markup;
+  }
+
+  function stippledCBezier(p0, p1, p2, p3, r1, r2, color){
+    var markup = '';
+    var len = dist(p0, p1) + dist(p1, p2) + dist(p2, p3);
+    if (len === 0) return '';
+    var t = 0;
+    while(t <= 1){
+      var mt = 1 - t;
+      var pt = {
+        x: mt*mt*mt*p0.x + 3*mt*mt*t*p1.x + 3*mt*t*t*p2.x + t*t*t*p3.x,
+        y: mt*mt*mt*p0.y + 3*mt*mt*t*p1.y + 3*mt*t*t*p2.y + t*t*t*p3.y
+      };
+      var currentR = r1 + (r2 - r1) * t;
+      markup += '<circle cx="'+pt.x+'" cy="'+pt.y+'" r="'+currentR+'" fill="'+color+'"/>';
+      var step = (currentR * 2 + currentR * 0.8) / len;
+      t += Math.max(0.01, step);
+    }
+    return markup;
+  }
+
+  function stippledLine(p0, p1, r1, r2, color){
+    var markup = '';
+    var len = dist(p0, p1);
+    if (len === 0) return '';
+    var t = 0;
+    while(t <= 1){
+      var pt = { x: p0.x + (p1.x - p0.x) * t, y: p0.y + (p1.y - p0.y) * t };
+      var currentR = r1 + (r2 - r1) * t;
+      markup += '<circle cx="'+pt.x+'" cy="'+pt.y+'" r="'+currentR+'" fill="'+color+'"/>';
+      var step = (currentR * 2 + currentR * 0.8) / len;
+      t += Math.max(0.01, step);
+    }
+    return markup;
+  }
+
+  function buildShape(type, cx, cy, rIn, rOut, spread, fillCol, strokeCol, sw, baseColor, isStippled){
     var tip, base, left, right, c1, c2, mid, r, oL, oR, iL, iR, d;
+    
+    if (isStippled) {
+       var rBig = (rOut - rIn) * 0.05;
+       var rSmall = Math.max(0.5, rBig * 0.2);
+       var col = (fillCol && fillCol !== 'none') ? fillCol : strokeCol;
+       if (col === 'none') col = baseColor;
+       
+       var markup = '';
+       switch(type){
+         case 'petal':
+         case 'leaf':
+         case 'veinedLeaf':
+           tip = P(cx,cy,rOut,0);
+           var sFactor = (type==='petal' ? 1 : (type==='leaf' ? 0.5 : 0.7));
+           left = P(cx,cy,rIn, -spread * sFactor);
+           right = P(cx,cy,rIn, spread * sFactor);
+           var cv = type==='petal' ? 0.55 : (type==='leaf' ? 0.3 : 0.4);
+           var cr = type==='petal' ? 0.62 : (type==='leaf' ? 0.7 : 0.6);
+           c1 = P(cx,cy, rIn + (rOut-rIn)*cr, -spread*cv);
+           c2 = P(cx,cy, rIn + (rOut-rIn)*cr, spread*cv);
+           markup += stippledQBezier(left, c1, tip, rBig, rSmall, col);
+           markup += stippledQBezier(right, c2, tip, rBig, rSmall, col);
+           return markup;
+           
+         case 'diamond':
+         case 'triangleAccent':
+           tip = P(cx,cy,rOut, type==='triangleAccent' ? spread*0.85 : 0);
+           base = P(cx,cy,rIn, type==='triangleAccent' ? spread*0.85 : 0);
+           left = P(cx,cy,(rIn+rOut)/2, -spread * (type==='triangleAccent' ? 0.15 : 1));
+           right = P(cx,cy,(rIn+rOut)/2, spread);
+           markup += stippledLine(base, left, rBig, rSmall, col);
+           markup += stippledLine(left, tip, rSmall, rSmall, col);
+           if (type==='diamond') {
+             markup += stippledLine(tip, right, rSmall, rSmall, col);
+             markup += stippledLine(right, base, rSmall, rBig, col);
+           } else {
+             markup += stippledLine(tip, base, rSmall, rBig, col);
+           }
+           return markup;
+           
+         case 'dot':
+           mid = P(cx,cy,(rIn+rOut)/2,0);
+           r = (rOut-rIn)*0.32;
+           return '<circle cx="'+mid.x+'" cy="'+mid.y+'" r="'+r+'" fill="'+col+'"/>';
+           
+         case 'arcSlice':
+           oL = P(cx,cy,rOut,-spread); oR = P(cx,cy,rOut,spread);
+           iR = P(cx,cy,rIn,spread); iL = P(cx,cy,rIn,-spread);
+           markup += stippledLine(oL, iL, rSmall, rBig, col);
+           markup += stippledLine(oR, iR, rSmall, rBig, col);
+           markup += stippledLine(iL, iR, rBig, rBig, col);
+           markup += stippledLine(oL, oR, rSmall, rSmall, col);
+           return markup;
+           
+         case 'gothicArch':
+           base = P(cx,cy,rIn,0);
+           left = P(cx,cy,rIn,-spread*0.8);
+           right = P(cx,cy,rIn,spread*0.8);
+           tip = P(cx,cy,rOut,0);
+           c1 = P(cx,cy, rIn + (rOut-rIn)*0.5, -spread*0.8);
+           c2 = P(cx,cy, rIn + (rOut-rIn)*0.5, spread*0.8);
+           markup += stippledQBezier(left, c1, tip, rBig, rSmall, col);
+           markup += stippledQBezier(right, c2, tip, rBig, rSmall, col);
+           return markup;
+           
+         case 'swoosh':
+           base = P(cx,cy,rIn,-spread*0.3);
+           tip = P(cx,cy,rOut,spread*0.9);
+           c1 = P(cx,cy, rIn + (rOut-rIn)*0.2, spread*1.2);
+           c2 = P(cx,cy, rIn + (rOut-rIn)*0.8, -spread*0.5);
+           var rightBase = P(cx,cy,rIn, spread*0.3);
+           var rc1 = P(cx,cy, rIn + (rOut-rIn)*0.7, -spread*0.2);
+           var rc2 = P(cx,cy, rIn + (rOut-rIn)*0.2, spread*1.5);
+           markup += stippledCBezier(base, c1, c2, tip, rBig, rSmall, col);
+           markup += stippledCBezier(rightBase, rc2, rc1, tip, rBig, rSmall, col);
+           return markup;
+           
+         case 'brushStroke':
+           base = P(cx,cy,rIn,-spread*0.6);
+           tip = P(cx,cy,rOut,-spread*0.6);
+           c1 = P(cx,cy, rIn + (rOut-rIn)*0.4, spread*1.8);
+           c2 = P(cx,cy, rIn + (rOut-rIn)*0.6, spread*1.8);
+           var rightBase2 = P(cx,cy,rIn, 0);
+           var rc1_2 = P(cx,cy, rIn + (rOut-rIn)*0.6, spread*1.4);
+           var rc2_2 = P(cx,cy, rIn + (rOut-rIn)*0.4, spread*1.4);
+           markup += stippledCBezier(base, c1, c2, tip, rBig, rSmall, col);
+           markup += stippledCBezier(rightBase2, rc2_2, rc1_2, tip, rBig, rSmall, col);
+           return markup;
+       }
+    }
+    
     switch(type){
       case 'petal':
         tip = P(cx,cy,rOut,0);
@@ -651,6 +799,28 @@
             v += '<path d="M '+vpL.x+' '+vpL.y+' L '+vp.x+' '+vp.y+' L '+vpR.x+' '+vpR.y+'" stroke="'+veinColor+'" stroke-width="'+veinSw+'" fill="none"/>';
         }
         return shape + v;
+      case 'swoosh':
+        base = P(cx,cy,rIn,-spread*0.3);
+        tip = P(cx,cy,rOut,spread*0.9);
+        c1 = P(cx,cy, rIn + (rOut-rIn)*0.2, spread*1.2);
+        c2 = P(cx,cy, rIn + (rOut-rIn)*0.8, -spread*0.5);
+        var rightBase = P(cx,cy,rIn, spread*0.3);
+        var rc1 = P(cx,cy, rIn + (rOut-rIn)*0.7, -spread*0.2);
+        var rc2 = P(cx,cy, rIn + (rOut-rIn)*0.2, spread*1.5);
+        d = 'M '+base.x+' '+base.y+' C '+c1.x+' '+c1.y+' '+c2.x+' '+c2.y+' '+tip.x+' '+tip.y;
+        d += ' C '+rc1.x+' '+rc1.y+' '+rc2.x+' '+rc2.y+' '+rightBase.x+' '+rightBase.y+' Z';
+        return shapePath(d, fillCol, strokeCol, sw);
+      case 'brushStroke':
+        base = P(cx,cy,rIn,-spread*0.6);
+        tip = P(cx,cy,rOut,-spread*0.6);
+        c1 = P(cx,cy, rIn + (rOut-rIn)*0.4, spread*1.8);
+        c2 = P(cx,cy, rIn + (rOut-rIn)*0.6, spread*1.8);
+        var rightBase2 = P(cx,cy,rIn, 0);
+        var rc1_2 = P(cx,cy, rIn + (rOut-rIn)*0.6, spread*1.4);
+        var rc2_2 = P(cx,cy, rIn + (rOut-rIn)*0.4, spread*1.4);
+        d = 'M '+base.x+' '+base.y+' C '+c1.x+' '+c1.y+' '+c2.x+' '+c2.y+' '+tip.x+' '+tip.y;
+        d += ' C '+rc1_2.x+' '+rc1_2.y+' '+rc2_2.x+' '+rc2_2.y+' '+rightBase2.x+' '+rightBase2.y+' Z';
+        return shapePath(d, fillCol, strokeCol, sw);
       case 'nestedPetal':
         tip = P(cx,cy,rOut,0);
         left = P(cx,cy,rIn,-spread);
@@ -714,7 +884,8 @@
     var organic = ['petal','leaf','dot'];
     var geometric = ['diamond','arcSlice','triangleAccent'];
     var ink = ['gothicArch','veinedLeaf','nestedPetal','scallop','stippledArc'];
-    var pool = style === 'organic' ? organic : style === 'geometric' ? geometric : style === 'detailed-ink' ? ink : organic.concat(geometric, ink);
+    var callig = ['swoosh','brushStroke'];
+    var pool = style === 'organic' ? organic : style === 'geometric' ? geometric : style === 'detailed-ink' ? ink : style === 'calligraphy' ? callig : organic.concat(geometric, ink, callig);
     return pick(rng, pool);
   }
 
@@ -744,6 +915,7 @@
     var sections = complexityToSections(params.complexity);
     var wedgeHalf = 180 / sections;
     var palette = params.palette;
+    var isStippled = params.strokeStyle === 'stippled';
     var colors = palette.colors;
     var bg = palette.bg;
 
@@ -768,7 +940,19 @@
       content += mainGrid;
     }
 
-    content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+(maxR + size*0.015)+'" fill="none" stroke="'+colors[0]+'" stroke-width="'+(size*0.001)+'" opacity="0.5"/>';
+    if (isStippled) {
+      for (var ri = 0; ri <= numRings; ri++) {
+         var ringR = innerR + ri * bandWidth;
+         var dotR = size * 0.002;
+         var dash = '0 ' + (dotR * 4.5);
+         content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+ringR+'" fill="none" stroke="'+colors[0]+'" stroke-width="'+(dotR*2)+'" stroke-dasharray="'+dash+'" stroke-linecap="round" opacity="0.8"/>';
+      }
+      var dotROut = size * 0.002;
+      var dashOut = '0 ' + (dotROut * 4.5);
+      content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+(maxR + size*0.015)+'" fill="none" stroke="'+colors[0]+'" stroke-width="'+(dotROut*2)+'" stroke-dasharray="'+dashOut+'" stroke-linecap="round" opacity="0.8"/>';
+    } else {
+      content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+(maxR + size*0.015)+'" fill="none" stroke="'+colors[0]+'" stroke-width="'+(size*0.001)+'" opacity="0.5"/>';
+    }
 
     var cellContent = '';
     var cellGrid = '';
@@ -802,9 +986,21 @@
          if (params.palette.name === 'Monochrome ink') { strokeCol = '#000000'; fillCol = '#ffffff'; }
       }
 
-      var sw = size * 0.0012 * (2.2 - params.complexity*0.08);
+      var sw = Math.max(0.5, size * 0.0012 * (16 - params.complexity) / 15);
 
-      var shapeMarkup = buildShape(shapeType, cx, cy, rIn, rOut, spread, fillCol, strokeCol, sw, shapeColor);
+      if (params.strokeStyle === 'outlined') { fillCol = 'none'; }
+      else if (params.strokeStyle === 'detailed-linework') { fillCol = bg; }
+      else if (params.strokeStyle === 'stippled') { 
+         fillCol = shapeColor; 
+         strokeCol = 'none'; 
+      }
+      else if (params.strokeStyle === 'mixed') {
+        var mode = pick(rng, ['filled','outlined','detailed']);
+        if (mode==='outlined') fillCol = 'none';
+        if (mode==='detailed') fillCol = bg;
+      }
+
+      var shapeMarkup = buildShape(shapeType, cx, cy, rIn, rOut, spread, fillCol, strokeCol, sw, shapeColor, isStippled);
       var wedgeMarkup = shapeMarkup;
       if (params.mirror){
         wedgeMarkup += '<g transform="matrix(1,0,0,-1,0,'+(2*cy)+')">' + shapeMarkup + '</g>';
