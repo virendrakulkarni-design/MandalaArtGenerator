@@ -504,9 +504,11 @@
   </div>
 
   <div class="stage">
-    <div class="canvas-wrap" id="canvasWrap" style="position:relative;">
-      <svg id="mandalaSvg" viewBox="0 0 560 560" xmlns="http://www.w3.org/2000/svg" style="position:absolute; top:0; left:0; width:100%; height:100%;"></svg>
-      <canvas id="drawCanvas" width="1120" height="1120" style="position:absolute; top:0; left:0; width:100%; height:100%; display:none; cursor:crosshair;"></canvas>
+    <div class="canvas-wrap" id="canvasWrap">
+      <div style="position:relative; width:100%; aspect-ratio:1/1; max-height:80vh; max-width:80vh; margin:0 auto;">
+        <svg id="mandalaSvg" viewBox="0 0 560 560" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%; display:block; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3)); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);"></svg>
+        <canvas id="drawCanvas" width="1120" height="1120" style="position:absolute; top:0; left:0; width:100%; height:100%; display:none; cursor:crosshair;"></canvas>
+      </div>
       <div class="cell-tooltip" id="cellTooltip">
         <h3>Basic Cell Structure</h3>
         <div class="cell-svg-wrap">
