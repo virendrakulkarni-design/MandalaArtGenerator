@@ -433,6 +433,17 @@
     align-items:center;
     gap: 16px;
     z-index:20;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: zoom-in;
+  }
+  .cell-tooltip:hover {
+    width: 95vw;
+    height: 90vh;
+    max-width: none;
+    bottom: 5vh;
+    border-radius: 24px;
+    box-shadow: 0 40px 100px rgba(0,0,0,0.6);
+    cursor: zoom-out;
   }
   /* Top-center bar: Generate, Evolve, Animate */
   .toolbar-creative {
@@ -1434,10 +1445,40 @@
       var angle = s * (360/sections) + rotLayer1;
       content += '<g transform="rotate('+angle+' '+cx+' '+cy+')">' + wedgeMarkup + '</g>';
     }
+    
+    // Calculate cell bounding box and grid
+    var wedgeHalf = 180 / sections;
+    var wedgeHalfRad = wedgeHalf * Math.PI / 180;
+    var geomMaxY = maxR * Math.sin(wedgeHalfRad);
+    var axisY = cy + geomMaxY + size*0.06;
+    var fontSize = size * 0.018;
+    
+    var cellGrid = '';
+    var gridColor = params.strokeStyle !== 'detailed-linework' ? '#888888' : dark;
+    cellGrid += '<line x1="'+cx+'" y1="'+axisY+'" x2="'+(cx + maxR * Math.cos(wedgeHalfRad) + size*0.02)+'" y2="'+axisY+'" stroke="'+gridColor+'" stroke-width="'+(size*0.0015)+'" opacity="0.8"/>';
+    cellGrid += '<line x1="'+cx+'" y1="'+(axisY-size*0.005)+'" x2="'+cx+'" y2="'+(axisY+size*0.005)+'" stroke="'+gridColor+'" stroke-width="'+(size*0.0015)+'"/>';
+    cellGrid += '<text x="'+(cx + fontSize*0.2)+'" y="'+(axisY + fontSize*0.8)+'" fill="'+gridColor+'" font-family="var(--mono)" font-size="'+fontSize+'" transform="rotate(60 '+(cx + fontSize*0.2)+' '+(axisY + fontSize*0.8)+')" text-anchor="start">0'+params.unit+'</text>';
+
+    var maxTextLength = size * 0.12;
+    var textDownExt = maxTextLength * Math.sin(60 * Math.PI/180);
+    var textRightExt = maxTextLength * Math.cos(60 * Math.PI/180);
+    
+    var viewMinX = cx - size*0.05;
+    var viewMaxX = cx + maxR * Math.cos(wedgeHalfRad) + textRightExt + size*0.05;
+    var viewMinY = cy - geomMaxY - size*0.05;
+    var viewMaxY = axisY + textDownExt + size*0.05;
+    var viewW = viewMaxX - viewMinX;
+    var viewH = viewMaxY - viewMinY;
+    if (viewH < viewW * 0.4) {
+       var diff = (viewW * 0.4) - viewH; viewH += diff; viewMinY -= diff/2;
+    }
+    var cellViewBox = viewMinX + ' ' + viewMinY + ' ' + viewW + ' ' + viewH;
+    
+    var finalCellContent = '<rect x="-1000" y="-1000" width="3000" height="3000" fill="'+light+'"/>' + cellGrid + outerWedge + wedgeMarkup;
 
     return { 
       content: content, sections: sections, 
-      viewBox: '0 0 '+size+' '+size, cellContent: content, cellViewBox: '0 0 '+size+' '+size
+      viewBox: '0 0 '+size+' '+size, cellContent: finalCellContent, cellViewBox: cellViewBox
     };
   }
 
@@ -1548,9 +1589,39 @@
       content += '<g transform="rotate('+angle+' '+cx+' '+cy+')">' + wedgeMarkup + '</g>';
     }
 
+    // Calculate cell bounding box and grid
+    var wedgeHalf = 180 / sections;
+    var wedgeHalfRad = wedgeHalf * Math.PI / 180;
+    var geomMaxY = maxR * Math.sin(wedgeHalfRad);
+    var axisY = cy + geomMaxY + size*0.06;
+    var fontSize = size * 0.018;
+    
+    var cellGrid = '';
+    var gridColor = params.strokeStyle !== 'detailed-linework' ? '#888888' : dark;
+    cellGrid += '<line x1="'+cx+'" y1="'+axisY+'" x2="'+(cx + maxR * Math.cos(wedgeHalfRad) + size*0.02)+'" y2="'+axisY+'" stroke="'+gridColor+'" stroke-width="'+(size*0.0015)+'" opacity="0.8"/>';
+    cellGrid += '<line x1="'+cx+'" y1="'+(axisY-size*0.005)+'" x2="'+cx+'" y2="'+(axisY+size*0.005)+'" stroke="'+gridColor+'" stroke-width="'+(size*0.0015)+'"/>';
+    cellGrid += '<text x="'+(cx + fontSize*0.2)+'" y="'+(axisY + fontSize*0.8)+'" fill="'+gridColor+'" font-family="var(--mono)" font-size="'+fontSize+'" transform="rotate(60 '+(cx + fontSize*0.2)+' '+(axisY + fontSize*0.8)+')" text-anchor="start">0'+params.unit+'</text>';
+
+    var maxTextLength = size * 0.12;
+    var textDownExt = maxTextLength * Math.sin(60 * Math.PI/180);
+    var textRightExt = maxTextLength * Math.cos(60 * Math.PI/180);
+    
+    var viewMinX = cx - size*0.05;
+    var viewMaxX = cx + maxR * Math.cos(wedgeHalfRad) + textRightExt + size*0.05;
+    var viewMinY = cy - geomMaxY - size*0.05;
+    var viewMaxY = axisY + textDownExt + size*0.05;
+    var viewW = viewMaxX - viewMinX;
+    var viewH = viewMaxY - viewMinY;
+    if (viewH < viewW * 0.4) {
+       var diff = (viewW * 0.4) - viewH; viewH += diff; viewMinY -= diff/2;
+    }
+    var cellViewBox = viewMinX + ' ' + viewMinY + ' ' + viewW + ' ' + viewH;
+    
+    var finalCellContent = '<rect x="-1000" y="-1000" width="3000" height="3000" fill="'+light+'"/>' + cellGrid + leafWedge + wedgeMarkup;
+
     return { 
       content: content, sections: sections, 
-      viewBox: '0 0 '+size+' '+size, cellContent: content, cellViewBox: '0 0 '+size+' '+size
+      viewBox: '0 0 '+size+' '+size, cellContent: finalCellContent, cellViewBox: cellViewBox
     };
   }
 
