@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mandala Generator</title>
+<script data-goatcounter="https://mandalaartgenerator.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 <style>
   :root{
     --bg:#12111a;
@@ -1128,6 +1129,14 @@
     var params = readParams(state.seed);
     var result = generateSVG(params);
 
+    if (newSeed && window.goatcounter && window.goatcounter.count) {
+      window.goatcounter.count({
+        path: 'generate/' + params.shapeStyle,
+        title: 'Mandala Generated (' + params.palette.name + ', ' + params.strokeStyle + ', Mirror:' + params.mirror + ')',
+        event: true
+      });
+    }
+
     els.svg.setAttribute('viewBox', result.viewBox);
     els.svg.innerHTML = result.content;
 
@@ -1197,6 +1206,14 @@
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    
+    if (window.goatcounter && window.goatcounter.count) {
+      window.goatcounter.count({
+        path: 'download/svg',
+        title: 'Downloaded SVG',
+        event: true
+      });
+    }
     setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
   }
 
@@ -1222,7 +1239,16 @@
   els.showGrid.addEventListener('change', function(){ render(false, false); });
   els.generateBtn.addEventListener('click', function(){ render(true, true); });
   els.downloadBtn.addEventListener('click', downloadSVG);
-  els.printBtn.addEventListener('click', function(){ window.print(); });
+  els.printBtn.addEventListener('click', function(){ 
+    if (window.goatcounter && window.goatcounter.count) {
+      window.goatcounter.count({
+        path: 'print/design',
+        title: 'Printed Design',
+        event: true
+      });
+    }
+    window.print(); 
+  });
 
   buildPaletteUI();
   render(false, true);
