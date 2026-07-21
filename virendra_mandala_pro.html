@@ -699,9 +699,9 @@
                 <option value="mixed">Mixed styles</option>
               </optgroup>
               <optgroup label="Hand-Drawn Masterpieces">
-                <option value="exact-replica">Vaishnavi Original</option>
-                <option value="exact-replica-2">Dense Ferns (Image 1)</option>
-                <option value="exact-replica-3">Lotus Swirls (Image 3)</option>
+                <option value="exact-replica">Hand Drawn Original</option>
+                <option value="exact-replica-2">Dense Ferns</option>
+                <option value="exact-replica-3">Lotus Swirls</option>
               </optgroup>
             </select>
           </div>
@@ -1321,16 +1321,30 @@
   }
 
   function generateExactReplica2SVG(params) {
+    var rng = mulberry32(params.seed);
     var size = params.size * (params.unit === 'in' ? 96 : params.unit === 'cm' ? 37.795 : params.unit === 'mm' ? 3.7795 : 1);
     var cx = size/2, cy = size/2;
     var content = '<rect x="0" y="0" width="'+size+'" height="'+size+'" fill="#ffffff"/>';
-    var maxR = size * 0.45;
+    var maxR = size * 0.45 * (0.85 + rng()*0.15); // random scale to evolve
     
     // We will use 24-fold symmetry for the dense leaves
     var sections = 24;
-    var sw = Math.max(0.5, size * 0.001);
+    var sw = Math.max(0.5, size * 0.001) * (0.8 + rng()*0.4); // evolve line thickness
     var dark = '#000000';
     var light = '#ffffff';
+    
+    // Support colors if user changes them!
+    var currentP = currentPalette(rng);
+    if (params.strokeStyle !== 'detailed-linework' && params.strokeStyle !== 'stippled') {
+       if (currentP) {
+         dark = currentP.colors[0];
+         light = currentP.bg;
+         content = '<rect x="0" y="0" width="'+size+'" height="'+size+'" fill="'+light+'"/>';
+       }
+    }
+    
+    var rotLayer1 = rng() * (360/sections);
+    var rotLayer2 = rng() * (360/sections);
     
     // Central rings
     content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+(maxR*0.04)+'" fill="'+dark+'"/>';
@@ -1413,11 +1427,11 @@
     outerWedge += '</g>';
     
     for (var s = 0; s < sections; s++){
-      var angle = s * (360/sections);
+      var angle = s * (360/sections) + rotLayer2;
       content += '<g transform="rotate('+angle+' '+cx+' '+cy+')">' + outerWedge + '</g>';
     }
     for (var s = 0; s < sections; s++){
-      var angle = s * (360/sections);
+      var angle = s * (360/sections) + rotLayer1;
       content += '<g transform="rotate('+angle+' '+cx+' '+cy+')">' + wedgeMarkup + '</g>';
     }
 
@@ -1428,16 +1442,29 @@
   }
 
   function generateExactReplica3SVG(params) {
+    var rng = mulberry32(params.seed);
     var size = params.size * (params.unit === 'in' ? 96 : params.unit === 'cm' ? 37.795 : params.unit === 'mm' ? 3.7795 : 1);
     var cx = size/2, cy = size/2;
     var content = '<rect x="0" y="0" width="'+size+'" height="'+size+'" fill="#ffffff"/>';
-    var maxR = size * 0.45;
+    var maxR = size * 0.45 * (0.85 + rng()*0.15); // random scale
     
     // 8-fold symmetry for Lotus Swirls
     var sections = 8;
-    var sw = Math.max(0.8, size * 0.0015);
+    var sw = Math.max(0.8, size * 0.0015) * (0.8 + rng()*0.4);
     var dark = '#000000';
     var light = '#ffffff';
+    
+    var currentP = currentPalette(rng);
+    if (params.strokeStyle !== 'detailed-linework' && params.strokeStyle !== 'stippled') {
+       if (currentP) {
+         dark = currentP.colors[1] || currentP.colors[0];
+         light = currentP.bg;
+         content = '<rect x="0" y="0" width="'+size+'" height="'+size+'" fill="'+light+'"/>';
+       }
+    }
+    
+    var rotLayer1 = rng() * (360/sections);
+    var rotLayer2 = rng() * (360/sections);
     
     // Central motif
     var cR = maxR * 0.15;
@@ -1513,11 +1540,11 @@
     wedgeMarkup += '<circle cx="'+P(cx,cy,tR2*1.02,0).x+'" cy="'+P(cx,cy,tR2*1.02,0).y+'" r="'+(sw*5)+'" fill="none" stroke="'+dark+'" stroke-width="'+sw+'"/>';
     
     for (var s = 0; s < sections; s++){
-      var angle = s * (360/sections);
+      var angle = s * (360/sections) + rotLayer2;
       content += '<g transform="rotate('+angle+' '+cx+' '+cy+')">' + leafWedge + '</g>';
     }
     for (var s = 0; s < sections; s++){
-      var angle = s * (360/sections);
+      var angle = s * (360/sections) + rotLayer1;
       content += '<g transform="rotate('+angle+' '+cx+' '+cy+')">' + wedgeMarkup + '</g>';
     }
 
@@ -2179,6 +2206,7 @@
     var rng = mulberry32(params.seed);
     var conversion = { px: 1, in: 96, cm: 37.795, mm: 3.7795 };
     var sizePx = params.size * conversion[params.unit];
+    var size = sizePx; // needed for inner logic
     var cx = sizePx/2, cy = sizePx/2;
     var content = '';
     var cellContent = '';
@@ -2202,10 +2230,17 @@
     var blue = pColors[2];
     var white = pColors[3];
     
-    // Evolve slightly mutates sections (6, 8, 10, 12)
+    // Evolve slightly mutates sections
     var possibleSections = [6, 8, 8, 10, 12];
     var sections = possibleSections[Math.floor(rng() * possibleSections.length)];
     var wedgeHalf = 180 / sections;
+    var wedgeHalfRad = wedgeHalf * Math.PI / 180;
+    
+    // Evolve rotation offsets
+    var rotL1 = rng() * 360/sections;
+    var rotL2 = rng() * 360/sections;
+    
+    var wedge = '';
     
     var layerData = '';
     
@@ -2244,7 +2279,7 @@
     
     for (var s=0; s<sections; s++) {
         var angle = s * (360/sections);
-        var wedge = '';
+        var w = '';
         
         var pRin = cR * 1.1;
         var pRout = cR * 3;
@@ -2253,13 +2288,13 @@
         var l = p2cart((pRin+pRout)*0.5, -wedgeHalf*0.8);
         var r = p2cart((pRin+pRout)*0.5, wedgeHalf*0.8);
         
-        wedge += drawStippledCurve(base, l, tip, sizePx*0.003, gold);
-        wedge += drawStippledCurve(base, r, tip, sizePx*0.003, gold);
+        w += drawStippledCurve(base, l, tip, sizePx*0.003, gold);
+        w += drawStippledCurve(base, r, tip, sizePx*0.003, gold);
         
         var tSteps = 8;
         for (var t=1; t<tSteps; t++) {
            var pr = pRin + (pRout-pRin)*(t/tSteps);
-           wedge += '<circle cx="'+p2cart(pr, 0).x+'" cy="'+p2cart(pr,0).y+'" r="'+(sizePx*0.004*(1-t/tSteps) + sizePx*0.002)+'" fill="'+cyan+'"/>';
+           w += '<circle cx="'+p2cart(pr, 0).x+'" cy="'+p2cart(pr,0).y+'" r="'+(sizePx*0.004*(1-t/tSteps) + sizePx*0.002)+'" fill="'+cyan+'"/>';
         }
         
         var sBase = p2cart(cR*2.5, wedgeHalf); 
@@ -2268,37 +2303,44 @@
         var sTip2 = p2cart(cR*5, wedgeHalf*1.5);
         var sCtrl2 = p2cart(cR*4, sW2);
         
-        wedge += '<path d="M '+sBase.x+' '+sBase.y+' Q '+sCtrl1.x+' '+sCtrl1.y+' '+sTip.x+' '+sTip.y+' Q '+sCtrl2.x+' '+sCtrl2.y+' '+sBase.x+' '+sBase.y+' Z" fill="'+blue+'" stroke="'+cyan+'" stroke-width="'+(sizePx*0.002)+'"/>';
-        wedge += '<path d="M '+sBase.x+' '+sBase.y+' Q '+sCtrl1.x+' '+sCtrl1.y+' '+sTip2.x+' '+sTip2.y+' Q '+sCtrl2.x+' '+sCtrl2.y+' '+sBase.x+' '+sBase.y+' Z" fill="'+cyan+'" stroke="'+white+'" stroke-width="'+(sizePx*0.002)+'"/>';
+        w += '<path d="M '+sBase.x+' '+sBase.y+' Q '+sCtrl1.x+' '+sCtrl1.y+' '+sTip.x+' '+sTip.y+' Q '+sCtrl2.x+' '+sCtrl2.y+' '+sBase.x+' '+sBase.y+' Z" fill="'+blue+'" stroke="'+cyan+'" stroke-width="'+(sizePx*0.002)+'"/>';
+        w += '<path d="M '+sBase.x+' '+sBase.y+' Q '+sCtrl1.x+' '+sCtrl1.y+' '+sTip2.x+' '+sTip2.y+' Q '+sCtrl2.x+' '+sCtrl2.y+' '+sBase.x+' '+sBase.y+' Z" fill="'+cyan+'" stroke="'+white+'" stroke-width="'+(sizePx*0.002)+'"/>';
         
         var tdBase = p2cart(cR*6, 0);
         var tdTip = p2cart(cR*8.5, 0);
         var tdL = p2cart(cR*7.2, -wedgeHalf*0.8);
         var tdR = p2cart(cR*7.2, wedgeHalf*0.8);
         var tdPath = 'M '+tdBase.x+' '+tdBase.y+' Q '+tdL.x+' '+tdL.y+' '+tdTip.x+' '+tdTip.y+' Q '+tdR.x+' '+tdR.y+' '+tdBase.x+' '+tdBase.y+' Z';
-        wedge += '<path d="'+tdPath+'" fill="'+blue+'"/>';
-        wedge += drawStippledCurve(tdBase, tdL, tdTip, sizePx*0.004, white);
-        wedge += drawStippledCurve(tdBase, tdR, tdTip, sizePx*0.004, white);
-        wedge += drawStippledCurve(p2cart(cR*6.2, 0), p2cart(cR*7.2, -wedgeHalf*0.6), p2cart(cR*8.2, 0), sizePx*0.003, cyan);
-        wedge += drawStippledCurve(p2cart(cR*6.2, 0), p2cart(cR*7.2, wedgeHalf*0.6), p2cart(cR*8.2, 0), sizePx*0.003, cyan);
+        w += '<path d="'+tdPath+'" fill="'+blue+'"/>';
+        w += drawStippledCurve(tdBase, tdL, tdTip, sizePx*0.004, white);
+        w += drawStippledCurve(tdBase, tdR, tdTip, sizePx*0.004, white);
+        w += drawStippledCurve(p2cart(cR*6.2, 0), p2cart(cR*7.2, -wedgeHalf*0.6), p2cart(cR*8.2, 0), sizePx*0.003, cyan);
+        w += drawStippledCurve(p2cart(cR*6.2, 0), p2cart(cR*7.2, wedgeHalf*0.6), p2cart(cR*8.2, 0), sizePx*0.003, cyan);
         
         // Capture cell content from the unrotated first section
         if (s === 0) {
-           cellContent += wedge;
+           cellContent += w;
         }
         
-        layerData += '<g transform="rotate('+angle+' '+cx+' '+cy+')">' + wedge + '</g>';
-    }
-    content += layerData;
-    
-    var bR = cR * 5.3;
-    var bCirc = 2 * Math.PI * bR;
-    var numBDots = Math.floor(bCirc / (sizePx * 0.015));
-    for (var i=0; i<numBDots; i++) {
-        var p = p2cart(bR, i*(360/numBDots));
-        content += '<circle cx="'+p.x+'" cy="'+p.y+'" r="'+(sizePx*0.004)+'" fill="'+gold+'"/>';
+        var angleLayer1 = angle + rotL1;
+        content += '<g transform="rotate('+angleLayer1+' '+cx+' '+cy+')">' + w + '</g>';
     }
     
+    // Add dots rotated separately to evolve
+    var rDot = cR * 5.3;
+    var rDot2 = sizePx*0.004;
+    var rDot3 = sizePx*0.006;
+    var sw = sizePx*0.002;
+    function P(x, y, r, a) { var rad = a*Math.PI/180; return {x: x+r*Math.cos(rad), y: y+r*Math.sin(rad)}; }
+    var dotG = '';
+    for(var s=0; s<sections; s++){
+       var a = s * (360/sections) + rotL2;
+       var dp = P(cx, cy, rDot, a);
+       dotG += '<circle cx="'+dp.x+'" cy="'+dp.y+'" r="'+rDot2+'" fill="'+gold+'"/>';
+       dotG += '<circle cx="'+dp.x+'" cy="'+dp.y+'" r="'+rDot3+'" fill="none" stroke="'+cyan+'" stroke-width="'+sw+'"/>';
+    }
+    content += dotG;
+
     // Add grid lines for the cell tooltip
     var cellGrid = '';
     var gridColor = gold; 
