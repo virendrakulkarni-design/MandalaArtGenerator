@@ -316,9 +316,7 @@
     flex-direction: column;
     align-items: center;
     gap: 8px;
-    width: 90vmin;
-    max-width: 900px;
-    max-height: 90vh;
+    width: 280px;
   }
   .canvas-wrap:hover .cell-tooltip {
     opacity: 1;
@@ -387,9 +385,9 @@
       <div class="group-label">App Theme</div>
       <div class="field">
         <select id="appTheme">
-          <option value="dark">Dark</option>
+          <option value="dark" selected>Dark (Default)</option>
           <option value="light">Light</option>
-          <option value="professional" selected>Professional (Default)</option>
+          <option value="professional">Professional</option>
         </select>
       </div>
     </fieldset>
@@ -401,8 +399,8 @@
           <label for="sizeUnit">Unit</label>
         </div>
         <select id="sizeUnit" style="margin-bottom: 12px;">
-          <option value="px">Pixels (px)</option>
-          <option value="in" selected>Inches (in)</option>
+          <option value="px" selected>Pixels (px)</option>
+          <option value="in">Inches (in)</option>
           <option value="cm">Centimeters (cm)</option>
           <option value="mm">Millimeters (mm)</option>
         </select>
@@ -410,10 +408,10 @@
       <div class="field">
         <div class="field-row">
           <label for="size">Size</label>
-          <span class="readout" id="sizeReadout">6 in</span>
+          <span class="readout" id="sizeReadout">560 px</span>
         </div>
-        <input type="range" id="size" min="3" max="24" step="0.1" value="6">
-        <div class="ticks"><span id="sizeTickMin">3</span><span id="sizeTickMax">24</span></div>
+        <input type="range" id="size" min="300" max="800" step="10" value="560">
+        <div class="ticks"><span id="sizeTickMin">300</span><span id="sizeTickMax">800</span></div>
       </div>
     </fieldset>
 
@@ -424,22 +422,16 @@
           <label for="rings">Concentric circles</label>
           <span class="readout" id="ringsReadout">7</span>
         </div>
-        <input type="range" id="rings" min="3" max="20" step="1" value="7">
-        <div class="ticks"><span>3</span><span>20</span></div>
+        <input type="range" id="rings" min="3" max="14" step="1" value="7">
+        <div class="ticks"><span>3</span><span>14</span></div>
       </div>
       <div class="field">
         <div class="field-row">
           <label for="complexity">Complexity</label>
-          <span class="readout" id="complexityReadout">5 / 15</span>
+          <span class="readout" id="complexityReadout">5 / 10</span>
         </div>
-        <input type="range" id="complexity" min="1" max="15" step="1" value="5">
+        <input type="range" id="complexity" min="1" max="10" step="1" value="5">
         <div class="ticks"><span>simple</span><span>intricate</span></div>
-      </div>
-      <div class="field">
-        <div class="checkbox-row">
-          <input type="checkbox" id="showGrid" checked>
-          <label for="showGrid">Show guide grid</label>
-        </div>
       </div>
     </fieldset>
 
@@ -448,18 +440,16 @@
       <div class="field">
         <label for="shapeStyle">Motif style</label>
         <select id="shapeStyle">
-          <option value="organic" selected>Organic &mdash; petals &amp; leaves</option>
+          <option value="organic">Organic &mdash; petals &amp; leaves</option>
           <option value="geometric">Geometric &mdash; diamonds &amp; slices</option>
-          <option value="detailed-ink">Detailed Ink / Intricate</option>
-          <option value="mixed">Mixed</option>
+          <option value="mixed" selected>Mixed</option>
         </select>
       </div>
       <div class="field">
         <label for="strokeStyle">Fill style</label>
         <select id="strokeStyle">
-          <option value="filled">Filled shapes</option>
+          <option value="filled" selected>Filled shapes</option>
           <option value="outlined">Outlined only</option>
-          <option value="detailed-linework" selected>Detailed Linework (B&amp;W)</option>
           <option value="mixed">Mixed</option>
         </select>
       </div>
@@ -502,7 +492,6 @@
 (function(){
 
   var PALETTES = [
-    { name:'Monochrome ink', colors:['#000000','#222222','#111111'], bg:'#ffffff' },
     { name:'Gilded indigo', colors:['#C9A227','#8B7FD1','#E4BF4A','#5B5488'], bg:'#12111a' },
     { name:'Sunset bloom',  colors:['#FF6B6B','#F8961E','#F9C74F','#C1447E'], bg:'#1c1018' },
     { name:'Ocean depths',  colors:['#4EA8DE','#219EBC','#8ECAE6','#023047'], bg:'#08131a' },
@@ -523,7 +512,6 @@
     ringsReadout: document.getElementById('ringsReadout'),
     complexity: document.getElementById('complexity'),
     complexityReadout: document.getElementById('complexityReadout'),
-    showGrid: document.getElementById('showGrid'),
     shapeStyle: document.getElementById('shapeStyle'),
     strokeStyle: document.getElementById('strokeStyle'),
     mirror: document.getElementById('mirror'),
@@ -540,7 +528,7 @@
 
   var UNIT_CONFIGS = {
     px: { min: 300, max: 800, step: 10, val: 560 },
-    in: { min: 3, max: 24, step: 0.1, val: 6 },
+    in: { min: 3, max: 8.5, step: 0.1, val: 6 },
     cm: { min: 8, max: 22, step: 0.1, val: 15 },
     mm: { min: 80, max: 220, step: 1, val: 150 }
   };
@@ -580,13 +568,12 @@
     return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
   }
 
-  function shapePath(d, fillCol, strokeCol, strokeWidth){
-    var f = fillCol && fillCol !== 'none' ? fillCol : 'none';
-    var s = strokeCol && strokeCol !== 'none' ? strokeCol : 'none';
-    return '<path d="' + d + '" fill="' + f + '" stroke="' + s + '" stroke-width="' + strokeWidth + '"/>';
+  function shapePath(d, color, filled, strokeWidth){
+    if (filled) return '<path d="' + d + '" fill="' + color + '" stroke="none"/>';
+    return '<path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="' + strokeWidth + '"/>';
   }
 
-  function buildShape(type, cx, cy, rIn, rOut, spread, fillCol, strokeCol, sw, baseColor){
+  function buildShape(type, cx, cy, rIn, rOut, spread, color, filled, sw){
     var tip, base, left, right, c1, c2, mid, r, oL, oR, iL, iR, d;
     switch(type){
       case 'petal':
@@ -596,7 +583,7 @@
         c1 = P(cx,cy, rIn + (rOut-rIn)*0.62, -spread*0.55);
         c2 = P(cx,cy, rIn + (rOut-rIn)*0.62, spread*0.55);
         d = 'M '+left.x+' '+left.y+' Q '+c1.x+' '+c1.y+' '+tip.x+' '+tip.y+' Q '+c2.x+' '+c2.y+' '+right.x+' '+right.y+' A '+rIn+' '+rIn+' 0 0 0 '+left.x+' '+left.y+' Z';
-        return shapePath(d, fillCol, strokeCol, sw);
+        return shapePath(d, color, filled, sw);
       case 'leaf':
         tip = P(cx,cy,rOut,0);
         left = P(cx,cy,rIn,-spread*0.5);
@@ -604,107 +591,30 @@
         c1 = P(cx,cy, rIn + (rOut-rIn)*0.7, -spread*0.3);
         c2 = P(cx,cy, rIn + (rOut-rIn)*0.7, spread*0.3);
         d = 'M '+left.x+' '+left.y+' Q '+c1.x+' '+c1.y+' '+tip.x+' '+tip.y+' Q '+c2.x+' '+c2.y+' '+right.x+' '+right.y+' A '+rIn+' '+rIn+' 0 0 0 '+left.x+' '+left.y+' Z';
-        return shapePath(d, fillCol, strokeCol, sw);
+        return shapePath(d, color, filled, sw);
       case 'diamond':
         tip = P(cx,cy,rOut,0);
         base = P(cx,cy,rIn,0);
         left = P(cx,cy,(rIn+rOut)/2,-spread);
         right = P(cx,cy,(rIn+rOut)/2,spread);
         d = 'M '+base.x+' '+base.y+' L '+left.x+' '+left.y+' L '+tip.x+' '+tip.y+' L '+right.x+' '+right.y+' Z';
-        return shapePath(d, fillCol, strokeCol, sw);
+        return shapePath(d, color, filled, sw);
       case 'arcSlice':
         oL = P(cx,cy,rOut,-spread); oR = P(cx,cy,rOut,spread);
         iR = P(cx,cy,rIn,spread); iL = P(cx,cy,rIn,-spread);
         d = 'M '+oL.x+' '+oL.y+' A '+rOut+' '+rOut+' 0 0 1 '+oR.x+' '+oR.y+' L '+iR.x+' '+iR.y+' A '+rIn+' '+rIn+' 0 0 0 '+iL.x+' '+iL.y+' Z';
-        return shapePath(d, fillCol, strokeCol, sw);
+        return shapePath(d, color, filled, sw);
       case 'triangleAccent':
         base = P(cx,cy,rIn, spread*0.85);
         tip = P(cx,cy,rOut, spread*0.85);
         left = P(cx,cy,(rIn+rOut)/2, -spread*0.15);
         d = 'M '+base.x+' '+base.y+' L '+tip.x+' '+tip.y+' L '+left.x+' '+left.y+' Z';
-        return shapePath(d, fillCol, strokeCol, sw);
-      case 'gothicArch':
-        base = P(cx,cy,rIn,0);
-        left = P(cx,cy,rIn,-spread*0.8);
-        right = P(cx,cy,rIn,spread*0.8);
-        tip = P(cx,cy,rOut,0);
-        var rA = (rOut - rIn) * 1.5;
-        d = 'M '+left.x+' '+left.y+' A '+rA+' '+rA+' 0 0 1 '+tip.x+' '+tip.y+' A '+rA+' '+rA+' 0 0 1 '+right.x+' '+right.y+' A '+rIn+' '+rIn+' 0 0 0 '+left.x+' '+left.y+' Z';
-        return shapePath(d, fillCol, strokeCol, sw);
-      case 'veinedLeaf':
-        tip = P(cx,cy,rOut,0);
-        left = P(cx,cy,rIn,-spread*0.7);
-        right = P(cx,cy,rIn,spread*0.7);
-        c1 = P(cx,cy, rIn + (rOut-rIn)*0.6, -spread*0.4);
-        c2 = P(cx,cy, rIn + (rOut-rIn)*0.6, spread*0.4);
-        base = P(cx,cy,rIn,0);
-        d = 'M '+left.x+' '+left.y+' Q '+c1.x+' '+c1.y+' '+tip.x+' '+tip.y+' Q '+c2.x+' '+c2.y+' '+right.x+' '+right.y+' A '+rIn+' '+rIn+' 0 0 0 '+left.x+' '+left.y+' Z';
-        var shape = shapePath(d, fillCol, strokeCol, sw);
-        var veinSw = sw * 0.6;
-        var veinColor = (strokeCol && strokeCol !== 'none') ? strokeCol : '#000';
-        if (!strokeCol || strokeCol === 'none') veinColor = baseColor;
-        var v = '<path d="M '+base.x+' '+base.y+' L '+(P(cx,cy, rOut*0.9, 0).x)+' '+(P(cx,cy, rOut*0.9, 0).y)+'" stroke="'+veinColor+'" stroke-width="'+veinSw+'" fill="none"/>';
-        for(var vi=0.2; vi<=0.7; vi+=0.2){
-            var vp = P(cx,cy, rIn + (rOut-rIn)*vi, 0);
-            var vpL = P(cx,cy, rIn + (rOut-rIn)*(vi+0.1), -spread*0.35);
-            var vpR = P(cx,cy, rIn + (rOut-rIn)*(vi+0.1), spread*0.35);
-            v += '<path d="M '+vpL.x+' '+vpL.y+' L '+vp.x+' '+vp.y+' L '+vpR.x+' '+vpR.y+'" stroke="'+veinColor+'" stroke-width="'+veinSw+'" fill="none"/>';
-        }
-        return shape + v;
-      case 'nestedPetal':
-        tip = P(cx,cy,rOut,0);
-        left = P(cx,cy,rIn,-spread);
-        right = P(cx,cy,rIn,spread);
-        c1 = P(cx,cy, rIn + (rOut-rIn)*0.62, -spread*0.55);
-        c2 = P(cx,cy, rIn + (rOut-rIn)*0.62, spread*0.55);
-        d = 'M '+left.x+' '+left.y+' Q '+c1.x+' '+c1.y+' '+tip.x+' '+tip.y+' Q '+c2.x+' '+c2.y+' '+right.x+' '+right.y+' A '+rIn+' '+rIn+' 0 0 0 '+left.x+' '+left.y+' Z';
-        var main = shapePath(d, fillCol, strokeCol, sw);
-        var tip2 = P(cx,cy, rIn + (rOut-rIn)*0.6, 0);
-        var l2 = P(cx,cy, rIn, -spread*0.5);
-        var r2 = P(cx,cy, rIn, spread*0.5);
-        var ic1 = P(cx,cy, rIn + (rOut-rIn)*0.3, -spread*0.3);
-        var ic2 = P(cx,cy, rIn + (rOut-rIn)*0.3, spread*0.3);
-        var d2 = 'M '+l2.x+' '+l2.y+' Q '+ic1.x+' '+ic1.y+' '+tip2.x+' '+tip2.y+' Q '+ic2.x+' '+ic2.y+' '+r2.x+' '+r2.y+' Z';
-        var innerC = (strokeCol && strokeCol !== 'none') ? strokeCol : baseColor;
-        var inner = '<path d="'+d2+'" fill="none" stroke="'+innerC+'" stroke-width="'+(sw*0.8)+'"/>';
-        return main + inner;
-      case 'scallop':
-        oL = P(cx,cy,rOut,-spread); oR = P(cx,cy,rOut,spread);
-        iR = P(cx,cy,rIn,spread); iL = P(cx,cy,rIn,-spread);
-        d = 'M '+oL.x+' '+oL.y+' A '+rOut+' '+rOut+' 0 0 1 '+oR.x+' '+oR.y+' L '+iR.x+' '+iR.y+' A '+rIn+' '+rIn+' 0 0 0 '+iL.x+' '+iL.y+' Z';
-        var arc = shapePath(d, fillCol, strokeCol, sw);
-        var scallops = '';
-        var numScallops = Math.max(3, Math.floor(spread / 3));
-        var scColor = (strokeCol && strokeCol !== 'none') ? strokeCol : baseColor;
-        for(var si = -numScallops; si <= numScallops; si++){
-           var sa = (si / numScallops) * spread;
-           var scp = P(cx,cy,rOut,sa);
-           var sr = (rOut * (spread/numScallops) * Math.PI/180) * 0.9;
-           scallops += '<circle cx="'+scp.x+'" cy="'+scp.y+'" r="'+sr+'" fill="none" stroke="'+scColor+'" stroke-width="'+(sw*0.7)+'"/>';
-        }
-        return arc + scallops;
-      case 'stippledArc':
-        oL = P(cx,cy,rOut,-spread); oR = P(cx,cy,rOut,spread);
-        iR = P(cx,cy,rIn,spread); iL = P(cx,cy,rIn,-spread);
-        d = 'M '+oL.x+' '+oL.y+' A '+rOut+' '+rOut+' 0 0 1 '+oR.x+' '+oR.y+' L '+iR.x+' '+iR.y+' A '+rIn+' '+rIn+' 0 0 0 '+iL.x+' '+iL.y+' Z';
-        var baseArc = shapePath(d, fillCol, strokeCol, sw);
-        var dots = '';
-        var numDots = Math.floor((rOut-rIn)*spread * 0.4); 
-        var stRng = mulberry32(Math.floor(rIn*10 + spread*10));
-        var dotColor = (strokeCol && strokeCol !== 'none') ? strokeCol : baseColor;
-        for(var di=0; di<numDots; di++){
-            var rd = rIn + stRng()*(rOut-rIn);
-            var ad = -spread + stRng()*(spread*2);
-            var dp = P(cx,cy,rd,ad);
-            dots += '<circle cx="'+dp.x+'" cy="'+dp.y+'" r="'+(sw*0.5)+'px" fill="'+dotColor+'"/>';
-        }
-        return baseArc + dots;
+        return shapePath(d, color, filled, sw);
       case 'dot':
         mid = P(cx,cy,(rIn+rOut)/2,0);
         r = (rOut-rIn)*0.32;
-        var f = fillCol && fillCol !== 'none' ? fillCol : 'none';
-        var s = strokeCol && strokeCol !== 'none' ? strokeCol : 'none';
-        return '<circle cx="'+mid.x+'" cy="'+mid.y+'" r="'+r+'" fill="'+f+'" stroke="'+s+'" stroke-width="'+sw+'"/>';
+        if (filled) return '<circle cx="'+mid.x+'" cy="'+mid.y+'" r="'+r+'" fill="'+color+'"/>';
+        return '<circle cx="'+mid.x+'" cy="'+mid.y+'" r="'+r+'" fill="none" stroke="'+color+'" stroke-width="'+sw+'"/>';
       default:
         return '';
     }
@@ -713,14 +623,13 @@
   function pickShapeType(rng, style){
     var organic = ['petal','leaf','dot'];
     var geometric = ['diamond','arcSlice','triangleAccent'];
-    var ink = ['gothicArch','veinedLeaf','nestedPetal','scallop','stippledArc'];
-    var pool = style === 'organic' ? organic : style === 'geometric' ? geometric : style === 'detailed-ink' ? ink : organic.concat(geometric, ink);
+    var pool = style === 'organic' ? organic : style === 'geometric' ? geometric : organic.concat(geometric);
     return pick(rng, pool);
   }
 
   function complexityToSections(c){
-    var table = [6,8,8,10,12,12,16,16,20,24, 28, 30, 32, 36, 40];
-    return table[Math.max(0, Math.min(14, c-1))];
+    var table = [6,8,8,10,12,12,16,16,20,24];
+    return table[Math.max(0, Math.min(9, c-1))];
   }
 
   function currentPalette(rng){
@@ -749,62 +658,22 @@
 
     var content = '';
     content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+(maxR + size*0.03)+'" fill="'+bg+'"/>';
-    
-    if (params.showGrid) {
-      var mainGrid = '';
-      var mainGridColor = params.palette.random ? 'rgba(255,255,255,0.15)' : 'rgba(139,127,209,0.3)';
-      if (params.palette.name === 'Monochrome ink') mainGridColor = 'rgba(0,0,0,0.15)';
-      var gSw = size * 0.001;
-      for (var gi = 0; gi <= numRings; gi++) {
-        var gr = innerR + gi*bandWidth;
-        mainGrid += '<circle cx="'+cx+'" cy="'+cy+'" r="'+gr+'" fill="none" stroke="'+mainGridColor+'" stroke-width="'+gSw+'" stroke-dasharray="4 4"/>';
-      }
-      for (var gs = 0; gs < sections*2; gs++) {
-         var ga = (gs * 180/sections) * Math.PI / 180;
-         var gx = cx + Math.cos(ga)*maxR*1.05;
-         var gy = cy + Math.sin(ga)*maxR*1.05;
-         mainGrid += '<line x1="'+cx+'" y1="'+cy+'" x2="'+gx+'" y2="'+gy+'" stroke="'+mainGridColor+'" stroke-width="'+gSw+'" stroke-dasharray="2 4"/>';
-      }
-      content += mainGrid;
-    }
-
-    content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+(maxR + size*0.015)+'" fill="none" stroke="'+colors[0]+'" stroke-width="'+(size*0.001)+'" opacity="0.5"/>';
+    content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+(maxR + size*0.015)+'" fill="none" stroke="'+colors[0]+'" stroke-width="0.75" opacity="0.5"/>';
 
     var cellContent = '';
     var cellGrid = '';
     var gridColor = colors[0]; 
-    
-    var wedgeHalfRad = wedgeHalf * Math.PI / 180;
-    var geomMaxY = maxR * Math.sin(wedgeHalfRad);
-    var axisY = cy + geomMaxY + size*0.06; 
-    var fontSize = size * 0.018;
-    
-    var axisLine = '<line x1="'+cx+'" y1="'+axisY+'" x2="'+(cx + maxR * Math.cos(wedgeHalf) + size*0.02)+'" y2="'+axisY+'" stroke="'+gridColor+'" stroke-width="'+(size*0.0015)+'" opacity="0.8"/>';
-    cellGrid += axisLine;
-    cellGrid += '<line x1="'+cx+'" y1="'+(axisY-size*0.005)+'" x2="'+cx+'" y2="'+(axisY+size*0.005)+'" stroke="'+gridColor+'" stroke-width="'+(size*0.0015)+'"/>';
-    cellGrid += '<text x="'+(cx + fontSize*0.2)+'" y="'+(axisY + fontSize*0.8)+'" fill="'+gridColor+'" font-family="var(--mono)" font-size="'+fontSize+'" transform="rotate(60 '+(cx + fontSize*0.2)+' '+(axisY + fontSize*0.8)+')" text-anchor="start">0'+params.unit+'</text>';
 
     for (var i = 0; i < numRings; i++){
       var rIn = innerR + i*bandWidth + bandWidth*0.1;
       var rOut = innerR + (i+1)*bandWidth - bandWidth*0.1;
-      var shapeColor = colors[i % colors.length];
+      var color = colors[i % colors.length];
       var spread = wedgeHalf * (0.55 + rng()*0.25);
       var shapeType = pickShapeType(rng, params.shapeStyle);
-      
-      var fillCol = shapeColor, strokeCol = 'none';
-      if (params.strokeStyle === 'outlined') {
-         fillCol = 'none'; strokeCol = shapeColor;
-      } else if (params.strokeStyle === 'mixed') {
-         if (rng() > 0.35) { fillCol = shapeColor; strokeCol = 'none'; }
-         else { fillCol = 'none'; strokeCol = shapeColor; }
-      } else if (params.strokeStyle === 'detailed-linework') {
-         fillCol = bg; strokeCol = shapeColor; 
-         if (params.palette.name === 'Monochrome ink') { strokeCol = '#000000'; fillCol = '#ffffff'; }
-      }
+      var filled = params.strokeStyle === 'filled' ? true : params.strokeStyle === 'outlined' ? false : rng() > 0.35;
+      var sw = Math.max(0.6, (size/560) * (2.2 - params.complexity*0.12));
 
-      var sw = size * 0.0012 * (2.2 - params.complexity*0.08);
-
-      var shapeMarkup = buildShape(shapeType, cx, cy, rIn, rOut, spread, fillCol, strokeCol, sw, shapeColor);
+      var shapeMarkup = buildShape(shapeType, cx, cy, rIn, rOut, spread, color, filled, sw);
       var wedgeMarkup = shapeMarkup;
       if (params.mirror){
         wedgeMarkup += '<g transform="matrix(1,0,0,-1,0,'+(2*cy)+')">' + shapeMarkup + '</g>';
@@ -819,7 +688,6 @@
 
       if (params.complexity > 6 && rng() > 0.45){
         var dotColor = colors[(i+2) % colors.length];
-        if (params.strokeStyle === 'detailed-linework' && params.palette.name === 'Monochrome ink') dotColor = '#000000';
         var dotR = bandWidth * 0.05;
         var dotRadius = (rIn+rOut)/2;
         
@@ -836,33 +704,19 @@
         }
       }
 
-      var arcSw = size * 0.0015;
+      var arcSw = Math.max(0.3, size/1000);
       var rVal = (params.size * (rOut / sizePx)).toFixed(2);
       var arcP1 = P(cx, cy, rOut, -wedgeHalf);
       var arcP2 = P(cx, cy, rOut, wedgeHalf);
-      var dash = (size*0.006) + ' ' + (size*0.003);
+      var dash = (size/150) + ' ' + (size/75);
       cellGrid += '<path d="M '+arcP1.x+' '+arcP1.y+' A '+rOut+' '+rOut+' 0 0 1 '+arcP2.x+' '+arcP2.y+'" fill="none" stroke="'+gridColor+'" stroke-width="'+arcSw+'" stroke-dasharray="'+dash+'" opacity="0.6"/>';
-      
-      var px = cx + rOut * Math.cos(wedgeHalfRad);
-      var py = cy + rOut * Math.sin(wedgeHalfRad);
-      
-      cellGrid += '<line x1="'+px+'" y1="'+py+'" x2="'+px+'" y2="'+axisY+'" stroke="'+gridColor+'" stroke-width="'+(size*0.0008)+'" opacity="0.4" stroke-dasharray="'+(size*0.003)+' '+(size*0.003)+'"/>';
-      cellGrid += '<line x1="'+px+'" y1="'+(axisY-size*0.005)+'" x2="'+px+'" y2="'+(axisY+size*0.005)+'" stroke="'+gridColor+'" stroke-width="'+(size*0.0015)+'"/>';
-      
-      var textX = px + fontSize*0.2;
-      var textY = axisY + fontSize*0.8;
-      
-      cellGrid += '<text x="'+textX+'" y="'+textY+'" fill="'+gridColor+'" font-family="var(--mono)" font-size="'+fontSize+'" transform="rotate(60 '+textX+' '+textY+')" text-anchor="start">'+rVal+params.unit+'</text>';
+      var fontSize = Math.max(6, size/60);
+      cellGrid += '<text x="'+(cx+rOut+4)+'" y="'+(cy+fontSize/3)+'" fill="'+gridColor+'" font-family="var(--mono)" font-size="'+fontSize+'" transform="rotate('+(-wedgeHalf)+' '+cx+' '+cy+')">'+rVal+params.unit+'</text>';
     }
 
     var centerColor = colors[colors.length-1];
-    var centerFill = params.strokeStyle === 'detailed-linework' ? bg : centerColor;
-    var centerStroke = params.strokeStyle === 'detailed-linework' ? (params.palette.name === 'Monochrome ink' ? '#000000' : colors[0]) : 'none';
-    
-    var centerMarkup = '<circle cx="'+cx+'" cy="'+cy+'" r="'+(innerR*1.4)+'" fill="'+centerFill+'" stroke="'+centerStroke+'" stroke-width="'+(size*0.0015)+'"/>';
-    if (params.strokeStyle !== 'detailed-linework') {
-        centerMarkup += '<circle cx="'+cx+'" cy="'+cy+'" r="'+(innerR*1.4)+'" fill="none" stroke="'+colors[0]+'" stroke-width="'+(size*0.001)+'"/>';
-    }
+    var centerMarkup = '<circle cx="'+cx+'" cy="'+cy+'" r="'+(innerR*1.4)+'" fill="'+centerColor+'"/>';
+    centerMarkup += '<circle cx="'+cx+'" cy="'+cy+'" r="'+(innerR*1.4)+'" fill="none" stroke="'+colors[0]+'" stroke-width="0.75"/>';
     
     content += centerMarkup;
     cellContent += centerMarkup;
@@ -878,26 +732,10 @@
 
     var finalCellContent = '<rect x="-1000" y="-1000" width="3000" height="3000" fill="'+bg+'"/>' + cellContent + cellGrid;
     
-    var maxTextLength = size * 0.12;
-    var textDownExt = maxTextLength * Math.sin(60 * Math.PI/180);
-    var textRightExt = maxTextLength * Math.cos(60 * Math.PI/180);
-
-    var viewMinX = cx - size*0.05;
-    var viewMaxX = cx + maxR * Math.cos(wedgeHalfRad) + textRightExt + size*0.05;
-    
-    var viewMinY = cy - geomMaxY - size*0.05;
-    var viewMaxY = axisY + textDownExt + size*0.05;
-
-    var viewW = viewMaxX - viewMinX;
-    var viewH = viewMaxY - viewMinY;
-    
-    if (viewH < viewW * 0.4) {
-       var diff = (viewW * 0.4) - viewH;
-       viewH += diff;
-       viewMinY -= diff/2;
-    }
-
-    var cellViewBox = viewMinX + ' ' + viewMinY + ' ' + viewW + ' ' + viewH;
+    var viewH = maxR * Math.sin(wedgeRad) * 2.5;
+    var viewW = maxR * 1.1;
+    var viewY = cy - viewH/2;
+    var cellViewBox = cx + ' ' + viewY + ' ' + viewW + ' ' + viewH;
 
     return { 
       content: content, 
@@ -916,13 +754,11 @@
     var shapeStyle = els.shapeStyle.value;
     var strokeStyle = els.strokeStyle.value;
     var mirror = els.mirror.checked;
-    var showGrid = els.showGrid.checked;
     var rng = mulberry32(seed);
     var palette = currentPalette(rng);
     return {
       unit: unit, size: size, rings: rings, complexity: complexity,
       shapeStyle: shapeStyle, strokeStyle: strokeStyle, mirror: mirror,
-      showGrid: showGrid,
       palette: palette, seed: seed
     };
   }
@@ -1023,7 +859,6 @@
   els.shapeStyle.addEventListener('change', function(){ render(false, true); });
   els.strokeStyle.addEventListener('change', function(){ render(false, true); });
   els.mirror.addEventListener('change', function(){ render(false, true); });
-  els.showGrid.addEventListener('change', function(){ render(false, false); });
   els.generateBtn.addEventListener('click', function(){ render(true, true); });
   els.downloadBtn.addEventListener('click', downloadSVG);
   els.printBtn.addEventListener('click', function(){ window.print(); });
