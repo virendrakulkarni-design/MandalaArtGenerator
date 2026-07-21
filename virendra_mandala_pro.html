@@ -127,19 +127,25 @@
   }
   fieldset{
     border:none;
-    margin:0 0 16px;
-    padding:0;
+    margin:0 0 24px;
+    padding:0 0 24px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  fieldset:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
   }
   .group-label{
     font-size:11px;
     text-transform:uppercase;
     letter-spacing:0.12em;
     color:var(--gold);
-    margin:0 0 10px;
+    margin:0 0 16px;
     font-weight:600;
   }
   .field{
-    margin-bottom:12px;
+    margin-bottom:16px;
   }
   .field:last-child{ margin-bottom:0; }
   .field-row{
@@ -375,6 +381,7 @@
     position:relative;
     width:min(90vh, 100vw - 400px);
     max-width:800px;
+    aspect-ratio: 1 / 1;
     z-index: 1;
   }
   .canvas-wrap svg{
@@ -387,7 +394,7 @@
     backdrop-filter: blur(10px);
   }
   .canvas-wrap.animate svg{
-    animation: bloom 0.7s cubic-bezier(.2,.8,.3,1);
+    /* Handled by JS requestAnimationFrame now to prevent stuttering */
   }
   @media (prefers-reduced-motion: reduce){
     .canvas-wrap.animate svg{ animation:none; }
@@ -608,10 +615,10 @@
   </div>
 
   <div class="stage">
-    <div class="canvas-wrap" id="canvasWrap">
-      <div style="position:relative; width:100%; aspect-ratio:1/1; max-height:80vh; max-width:80vh; margin:0 auto;">
-        <svg id="mandalaSvg" viewBox="0 0 560 560" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%; display:block; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3)); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);"></svg>
-        <canvas id="drawCanvas" width="1120" height="1120" style="position:absolute; top:0; left:0; width:100%; height:100%; display:none; cursor:crosshair;"></canvas>
+    <div class="canvas-wrap" id="canvasWrap" style="aspect-ratio:1/1;">
+      <div style="position:relative; width:100%; height:100%;">
+        <svg id="mandalaSvg" viewBox="0 0 560 560" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%; display:block; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));"></svg>
+        <canvas id="drawCanvas" width="1120" height="1120" style="position:absolute; top:0; left:0; width:100%; height:100%; display:none; cursor:crosshair; border-radius:50%; z-index:10;"></canvas>
       </div>
     </div> <!-- end canvasWrap -->
 
@@ -624,11 +631,16 @@
     </div>
 
     <div class="actions-bar" id="drawActions" style="display:none; align-items:center;">
-      <div style="color:var(--text-sec); font-size:14px; white-space:nowrap;">Draw freely. Strokes mirror instantly!</div>
-      <label style="margin-bottom:0;">Size</label>
-      <input type="range" id="brushSize" min="1" max="20" value="4" style="width:100px; margin:0;">
-      <label style="margin-bottom:0;">Color</label>
-      <input type="color" id="brushColor" value="#ffaaaa" style="width:30px; height:30px; border:none; background:none; cursor:pointer; padding:0;">
+      <div style="display:flex; align-items:center; gap:8px; padding:0 12px; border-right:1px solid var(--border-soft);">
+        <label style="margin-bottom:0; font-size:12px; color:var(--text-sec); font-weight:500;">Size</label>
+        <input type="range" id="brushSize" min="1" max="20" value="4" style="width:80px; margin:0;">
+      </div>
+      <div style="display:flex; align-items:center; gap:8px; padding:0 12px; border-right:1px solid var(--border-soft);">
+        <label style="margin-bottom:0; font-size:12px; color:var(--text-sec); font-weight:500;">Color</label>
+        <div style="position:relative; width:24px; height:24px; border-radius:50%; overflow:hidden; border:2px solid var(--surface-2); box-shadow: 0 0 0 1px var(--border);">
+          <input type="color" id="brushColor" value="#ffaaaa" style="position:absolute; top:-10px; left:-10px; width:44px; height:44px; border:none; background:none; cursor:pointer; padding:0;">
+        </div>
+      </div>
       <button class="btn-primary" id="clearCanvasBtn" style="margin:0;">Clear Canvas</button>
       <button class="btn-secondary" id="downloadPngBtn" style="margin:0;">Download PNG</button>
     </div>
@@ -1165,7 +1177,7 @@
       
       cellContent += wedgeMarkup;
 
-      content += '<g data-ring-idx="'+i+'" style="transform-origin: 280px 280px; transition: transform 0.1s linear;">';
+      content += '<g data-ring-idx="'+i+'" style="transform-origin: 280px 280px;">';
       for (var s = 0; s < sections; s++){
         var angle = s * (360/sections);
         content += '<g transform="rotate('+angle+' '+cx+' '+cy+')">' + wedgeMarkup + '</g>';
@@ -1545,6 +1557,8 @@
       els.animateBtn.textContent = "Play Breathing Animation";
       cancelAnimationFrame(animFrameId);
       els.svg.style.transform = 'scale(1)';
+      var rings = document.querySelectorAll('#mandalaSvg g[data-ring-idx]');
+      rings.forEach(ring => ring.setAttribute('transform', 'rotate(0 280 280)'));
     }
   });
 
