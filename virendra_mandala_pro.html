@@ -628,6 +628,17 @@
       </fieldset>
 
       <fieldset>
+        <div class="group-label">Layout Mode</div>
+        <div class="field">
+          <select id="layoutMode">
+            <option value="single" selected>Single Mandala</option>
+            <option value="grid-square">Square Grid (Tessellation)</option>
+            <option value="grid-hex">Hexagonal Grid (Honeycomb)</option>
+          </select>
+        </div>
+      </fieldset>
+
+      <fieldset>
         <div class="group-label">Canvas Settings</div>
         <div class="field">
           <div class="field-row">
@@ -813,6 +824,7 @@
 
   var els = {
     appTheme: document.getElementById('appTheme'),
+    layoutMode: document.getElementById('layoutMode'),
     sizeUnit: document.getElementById('sizeUnit'),
     sizeTickMin: document.getElementById('sizeTickMin'),
     sizeTickMax: document.getElementById('sizeTickMax'),
@@ -1614,6 +1626,33 @@
 
     var cellViewBox = viewMinX + ' ' + viewMinY + ' ' + viewW + ' ' + viewH;
 
+    if (params.layoutMode && params.layoutMode !== 'single') {
+       var scale = 0.22;
+       var finalContent = '<defs><g id="unit">' + content + '</g></defs>';
+       finalContent += '<rect x="0" y="0" width="'+size+'" height="'+size+'" fill="'+bg+'"/>';
+       
+       if (params.layoutMode === 'grid-square') {
+           var step = size * scale;
+           for (var x = -step; x < size + step; x += step) {
+              for (var y = -step; y < size + step; y += step) {
+                 finalContent += '<use href="#unit" transform="translate('+x+','+y+') scale('+scale+') translate(-'+cx+',-'+cy+')"/>';
+              }
+           }
+       } else if (params.layoutMode === 'grid-hex') {
+           var w = size * scale;
+           var h = w * Math.sqrt(3)/2;
+           for (var row = -2; row < (size/h) + 2; row++) {
+              var y = row * h;
+              var offset = (row % 2 !== 0) ? (w/2) : 0;
+              for (var col = -2; col < (size/w) + 2; col++) {
+                 var x = col * w + offset;
+                 finalContent += '<use href="#unit" transform="translate('+x+','+y+') scale('+scale+') translate(-'+cx+',-'+cy+')"/>';
+              }
+           }
+       }
+       content = finalContent;
+    }
+
     return { 
       content: content, 
       sections: sections, 
@@ -1624,6 +1663,7 @@
   }
 
   function readParams(seed){
+    var layoutMode = els.layoutMode.value;
     var unit = els.sizeUnit.value;
     var size = parseFloat(els.size.value);
     var rings = parseInt(els.rings.value, 10);
@@ -1635,6 +1675,7 @@
     var rng = mulberry32(seed);
     var palette = currentPalette(rng);
     return {
+      layoutMode: layoutMode,
       unit: unit, size: size, rings: rings, complexity: complexity,
       shapeStyle: shapeStyle, strokeStyle: strokeStyle, mirror: mirror,
       showGrid: showGrid,
@@ -1756,6 +1797,9 @@
   els.mirror.addEventListener('change', function(){ render(false, true); });
   els.showGrid.addEventListener('change', function(){ render(false, false); });
   els.generateBtn.addEventListener('click', function(){ render(true, true); });
+  els.layoutMode.addEventListener('change', function(){ render(false, true); });
+  els.evolveBtn.addEventListener('click', function(){ render(true, true); });
+  els.analyzeBtn.addEventListener('click', function(){ els.imageUpload.click(); });
   els.downloadBtn.addEventListener('click', function(){
     resetToOriginal();
     downloadSVG();
