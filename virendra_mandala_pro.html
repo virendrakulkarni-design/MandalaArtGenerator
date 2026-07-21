@@ -680,6 +680,10 @@
               <option value="zentangle">Zentangle</option>
               <option value="detailed-ink">Ink</option>
               <option value="calligraphy">Brush</option>
+              <option value="sacred-geometry">Sacred Geometry</option>
+              <option value="boho">Boho / Celestial</option>
+              <option value="minimalist">Minimalist</option>
+              <option value="abstract">Modern Abstract</option>
               <option value="mixed">Mixed styles</option>
               <option value="exact-replica">Exact Replica</option>
             </select>
@@ -1235,8 +1239,64 @@
            var tR2 = P(cx,cy,tR - tSize*0.2, spread*0.4);
            var tD = 'M '+tBaseDrop.x+' '+tBaseDrop.y+' Q '+tL.x+' '+tL.y+' '+tTipDrop.x+' '+tTipDrop.y+' Q '+tR2.x+' '+tR2.y+' '+tBaseDrop.x+' '+tBaseDrop.y+' Z';
            tdMarkup += shapePath(tD, tFill, tColor, sw);
-        }
-        return tdMarkup;
+         }
+         return tdMarkup;
+       case 'hexagon':
+         var hexMarkup = '';
+         var hPts = [];
+         for(var hi=0; hi<6; hi++) hPts.push(P(cx,cy,rOut,hi*60 - 30));
+         var hD = 'M '+hPts[0].x+' '+hPts[0].y;
+         for(var hi=1; hi<6; hi++) hD += ' L '+hPts[hi].x+' '+hPts[hi].y;
+         hD += ' Z';
+         return shapePath(hD, fillCol, strokeCol, sw);
+       case 'octagon':
+         var octMarkup = '';
+         var oPts = [];
+         for(var oi=0; oi<8; oi++) oPts.push(P(cx,cy,rOut,oi*45 - 22.5));
+         var oD = 'M '+oPts[0].x+' '+oPts[0].y;
+         for(var oi=1; oi<8; oi++) oD += ' L '+oPts[oi].x+' '+oPts[oi].y;
+         oD += ' Z';
+         return shapePath(oD, fillCol, strokeCol, sw);
+       case 'overlappingCircles':
+         var circs = '';
+         var cRad = (rOut - rIn)/2;
+         var cCen = P(cx,cy, rIn + cRad, 0);
+         var fillCirc = (fillCol && fillCol !== 'none') ? fillCol : 'none';
+         var strokeCirc = (strokeCol && strokeCol !== 'none') ? strokeCol : baseColor;
+         circs += '<circle cx="'+cCen.x+'" cy="'+cCen.y+'" r="'+cRad+'" fill="'+fillCirc+'" stroke="'+strokeCirc+'" stroke-width="'+sw+'"/>';
+         circs += '<circle cx="'+(cCen.x-cRad*0.3)+'" cy="'+cCen.y+'" r="'+(cRad*0.8)+'" fill="none" stroke="'+strokeCirc+'" stroke-width="'+(sw*0.7)+'"/>';
+         circs += '<circle cx="'+(cCen.x+cRad*0.3)+'" cy="'+cCen.y+'" r="'+(cRad*0.8)+'" fill="none" stroke="'+strokeCirc+'" stroke-width="'+(sw*0.7)+'"/>';
+         return circs;
+       case 'crescentMoon':
+         var crRad = (rOut - rIn)*0.4;
+         var crCen = P(cx,cy, rIn + crRad, 0);
+         // Build a crescent using two overlapping arcs
+         var m1 = P(crCen.x - crRad*0.5, crCen.y - crRad*0.8);
+         var m2 = P(crCen.x - crRad*0.5, crCen.y + crRad*0.8);
+         var dM = 'M '+m1.x+' '+m1.y+' A '+crRad+' '+crRad+' 0 0 1 '+m2.x+' '+m2.y+' A '+(crRad*0.75)+' '+(crRad*0.75)+' 0 0 0 '+m1.x+' '+m1.y+' Z';
+         return shapePath(dM, fillCol, strokeCol, sw);
+       case 'sunburst':
+         var sbRad = (rOut - rIn)*0.2;
+         var sbCen = P(cx,cy, rIn + sbRad, 0);
+         var sbColor = (strokeCol && strokeCol !== 'none') ? strokeCol : baseColor;
+         var sbFill = (fillCol && fillCol !== 'none') ? fillCol : 'none';
+         var burst = '<circle cx="'+sbCen.x+'" cy="'+sbCen.y+'" r="'+sbRad+'" fill="'+sbFill+'" stroke="'+sbColor+'" stroke-width="'+sw+'"/>';
+         for(var sbi=0; sbi<8; sbi++){
+             var a = sbi * 45;
+             var rL = sbRad * 1.3;
+             var rL2 = sbRad * 2.5;
+             burst += '<line x1="'+(sbCen.x + rL*Math.cos(a*Math.PI/180))+'" y1="'+(sbCen.y + rL*Math.sin(a*Math.PI/180))+'" x2="'+(sbCen.x + rL2*Math.cos(a*Math.PI/180))+'" y2="'+(sbCen.y + rL2*Math.sin(a*Math.PI/180))+'" stroke="'+sbColor+'" stroke-width="'+(sw*0.8)+'"/>';
+         }
+         return burst;
+       case 'blob':
+         var blBase = P(cx,cy,rIn,0);
+         var blTip = P(cx,cy,rOut,0);
+         var bC1 = P(cx,cy, rIn + (rOut-rIn)*0.2, -spread*1.5);
+         var bC2 = P(cx,cy, rIn + (rOut-rIn)*0.8, spread*0.5);
+         var bC3 = P(cx,cy, rIn + (rOut-rIn)*0.8, -spread*0.2);
+         var bC4 = P(cx,cy, rIn + (rOut-rIn)*0.2, spread*1.2);
+         var bD = 'M '+blBase.x+' '+blBase.y+' C '+bC1.x+' '+bC1.y+' '+bC2.x+' '+bC2.y+' '+blTip.x+' '+blTip.y+' C '+bC3.x+' '+bC3.y+' '+bC4.x+' '+bC4.y+' '+blBase.x+' '+blBase.y+' Z';
+         return shapePath(bD, fillCol, strokeCol, sw);
       default:
         return '';
     }
@@ -1252,6 +1312,11 @@
     var spiralDots = ['dot'];
     var paisley = ['leaf','swoosh','petal','veinedLeaf','teardropChain'];
     var zentangle = ['gothicArch','diamond','arcSlice','scallop','veinedLeaf','nestedPetal','triangleAccent', 'evilEye', 'fan'];
+    var sacredGeometry = ['hexagon','octagon','overlappingCircles','diamond','triangleAccent'];
+    var boho = ['crescentMoon','sunburst','teardropChain','petal','leaf'];
+    var minimalist = ['petal','diamond','arcSlice','dot','leaf'];
+    var abstract = ['blob','swoosh','brushStroke','scallop'];
+    
     var pool;
     if (style === 'organic') pool = organic;
     else if (style === 'geometric') pool = geometric;
@@ -1262,7 +1327,11 @@
     else if (style === 'spiral-dots') pool = spiralDots;
     else if (style === 'paisley') pool = paisley;
     else if (style === 'zentangle') pool = zentangle;
-    else pool = organic.concat(geometric, ink, callig, ['evilEye', 'fan', 'teardropChain']);
+    else if (style === 'sacred-geometry') pool = sacredGeometry;
+    else if (style === 'boho') pool = boho;
+    else if (style === 'minimalist') pool = minimalist;
+    else if (style === 'abstract') pool = abstract;
+    else pool = organic.concat(geometric, ink, callig, ['evilEye', 'fan', 'teardropChain'], sacredGeometry, boho, abstract);
     return pick(rng, pool);
   }
 
@@ -1385,6 +1454,12 @@
       }
 
       var sw = Math.max(0.5, size * 0.0012 * (16 - params.complexity) / 15);
+      
+      if (params.shapeStyle === 'minimalist') {
+         sw = Math.max(0.2, size * 0.0006);
+         fillCol = bg;
+         strokeCol = shapeColor;
+      }
 
       if (params.strokeStyle === 'outlined') { fillCol = 'none'; }
       else if (params.strokeStyle === 'detailed-linework') { fillCol = bg; }
