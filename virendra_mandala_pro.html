@@ -624,12 +624,23 @@
       min-height: 100vw;
       padding: 40px 0;
       flex: 1 1 auto;
+      flex-direction: column;
+      justify-content: flex-start;
     }
     .canvas-wrap {
       width: 90vw !important;
       height: 90vw !important;
       max-width: 500px !important;
       margin: 0 auto;
+    }
+    .toolbar-creative, .toolbar-export, .actions-bar {
+      position: relative;
+      top: auto; bottom: auto; left: auto; right: auto;
+      margin: 20px auto 0;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 90vw;
     }
     .cell-tooltip {
       position: relative;
