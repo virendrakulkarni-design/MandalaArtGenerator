@@ -91,54 +91,6 @@
   /* Hide scrollbar for a cleaner look */
   .rail::-webkit-scrollbar { width: 0; background: transparent; }
   
-  @media (max-width: 900px){
-    html, body, .app {
-      height: auto;
-      min-height: 100vh;
-      overflow: visible;
-      overflow-x: hidden;
-    }
-    .app {
-      display: flex;
-      flex-direction: column;
-    }
-    .rail { 
-      position: relative;
-      top: 0; left: 0; bottom: auto; width: 100%; border-radius: 0;
-      border: none; border-bottom:1px solid var(--border); 
-      box-shadow: 0 4px 24px rgba(0,0,0,0.2); 
-      max-height: none;
-      overflow: visible;
-      flex: 0 0 auto;
-    }
-    .stage {
-      position: relative;
-      top: 0;
-      height: auto;
-      min-height: 100vw;
-      padding: 40px 0;
-      flex: 1 1 auto;
-    }
-    .canvas-wrap {
-      width: 90vw !important;
-      height: 90vw !important;
-      max-width: 500px !important;
-      margin: 0 auto;
-    }
-    .cell-tooltip {
-      position: relative;
-      width: 90vw !important;
-      bottom: auto;
-      left: auto;
-      transform: none;
-      margin: 40px auto 20px;
-    }
-    .meta {
-      position: relative;
-      bottom: auto;
-      margin-top: 20px;
-    }
-  }
   .brand{
     display:flex;
     align-items:baseline;
@@ -644,6 +596,55 @@
   .analysis-results { background: var(--surface-2); padding: 16px; border-radius: 8px; border: 1px solid var(--border-soft); font-size: 13px; line-height: 1.6; }
   .analysis-results strong { color: var(--gold-bright); }
   .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 8px; }
+
+  @media (max-width: 900px){
+    html, body, .app {
+      height: auto;
+      min-height: 100vh;
+      overflow: visible;
+      overflow-x: hidden;
+    }
+    .app {
+      display: flex;
+      flex-direction: column;
+    }
+    .rail { 
+      position: relative;
+      top: 0; left: 0; bottom: auto; width: 100%; border-radius: 0;
+      border: none; border-bottom:1px solid var(--border); 
+      box-shadow: 0 4px 24px rgba(0,0,0,0.2); 
+      max-height: none;
+      overflow: visible;
+      flex: 0 0 auto;
+    }
+    .stage {
+      position: relative;
+      top: 0;
+      height: auto;
+      min-height: 100vw;
+      padding: 40px 0;
+      flex: 1 1 auto;
+    }
+    .canvas-wrap {
+      width: 90vw !important;
+      height: 90vw !important;
+      max-width: 500px !important;
+      margin: 0 auto;
+    }
+    .cell-tooltip {
+      position: relative;
+      width: 90vw !important;
+      bottom: auto;
+      left: auto;
+      transform: none;
+      margin: 40px auto 20px;
+    }
+    .meta {
+      position: relative;
+      bottom: auto;
+      margin-top: 20px;
+    }
+  }
 
 </style>
 </head>
