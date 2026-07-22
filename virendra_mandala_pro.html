@@ -1417,422 +1417,11 @@
     var rng = mulberry32(params.seed);
     var size = params.size * (params.unit === 'in' ? 96 : params.unit === 'cm' ? 37.795 : params.unit === 'mm' ? 3.7795 : 1);
     var cx = size/2, cy = size/2;
-    var content = '<rect x="0" y="0" width="'+size+'" height="'+size+'" fill="#ffffff"/>';
-    var maxR = size * 0.45 * (0.85 + rng()*0.15); // random scale to evolve
-    
-    // We will use 24-fold symmetry for the dense leaves
-    var sections = 24;
-    var sw = Math.max(0.5, size * 0.001) * (0.8 + rng()*0.4); // evolve line thickness
-    var dark = '#000000';
-    var light = '#ffffff';
-    
-    // Support colors if user changes them!
-    var currentP = currentPalette(rng);
-    if (params.strokeStyle !== 'detailed-linework' && params.strokeStyle !== 'stippled') {
-       if (currentP) {
-         dark = currentP.colors[0];
-         light = currentP.bg;
-         content = '<rect x="0" y="0" width="'+size+'" height="'+size+'" fill="'+light+'"/>';
-       }
-    }
-    
-    var rotLayer1 = rng() * (360/sections);
-    var rotLayer2 = rng() * (360/sections);
-    
-    // Central rings
-    content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+(maxR*0.04)+'" fill="'+dark+'"/>';
-    content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+(maxR*0.06)+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*2)+'"/>';
-    
-    var wedgeMarkup = '';
-    
-    // Layer 1: Small dark petals
-    var r1 = maxR * 0.08, r2 = maxR * 0.18;
-    var pTip1 = P(cx, cy, r2, 0);
-    var pBaseL = P(cx, cy, r1, -360/sections*0.4);
-    var pBaseR = P(cx, cy, r1, 360/sections*0.4);
-    var d1 = 'M '+pBaseL.x+' '+pBaseL.y+' Q '+P(cx,cy,r1*1.5, -360/sections).x+' '+P(cx,cy,r1*1.5, -360/sections).y+' '+pTip1.x+' '+pTip1.y+' Q '+P(cx,cy,r1*1.5, 360/sections).x+' '+P(cx,cy,r1*1.5, 360/sections).y+' '+pBaseR.x+' '+pBaseR.y+' Z';
-    wedgeMarkup += '<path d="'+d1+'" fill="'+dark+'"/>';
-    
-    // Layer 2: White outlined petals
-    var r3 = maxR * 0.32;
-    var pTip2 = P(cx, cy, r3, 0);
-    var p2BaseL = P(cx, cy, r2*0.8, -360/sections*0.5);
-    var p2BaseR = P(cx, cy, r2*0.8, 360/sections*0.5);
-    var d2 = 'M '+p2BaseL.x+' '+p2BaseL.y+' Q '+P(cx,cy,r2*1.3, -360/sections).x+' '+P(cx,cy,r2*1.3, -360/sections).y+' '+pTip2.x+' '+pTip2.y+' Q '+P(cx,cy,r2*1.3, 360/sections).x+' '+P(cx,cy,r2*1.3, 360/sections).y+' '+p2BaseR.x+' '+p2BaseR.y+' Z';
-    wedgeMarkup += '<path d="'+d2+'" fill="'+light+'" stroke="'+dark+'" stroke-width="'+(sw*1.5)+'"/>';
-    // Inner stippled leaf outline
-    var pTip2in = P(cx, cy, r3*0.85, 0);
-    var p2BaseLin = P(cx, cy, r2*0.9, -360/sections*0.3);
-    var p2BaseRin = P(cx, cy, r2*0.9, 360/sections*0.3);
-    var d2in = 'M '+p2BaseLin.x+' '+p2BaseLin.y+' Q '+P(cx,cy,r2*1.2, -360/sections*0.6).x+' '+P(cx,cy,r2*1.2, -360/sections*0.6).y+' '+pTip2in.x+' '+pTip2in.y+' Q '+P(cx,cy,r2*1.2, 360/sections*0.6).x+' '+P(cx,cy,r2*1.2, 360/sections*0.6).y+' '+p2BaseRin.x+' '+p2BaseRin.y+' Z';
-    wedgeMarkup += '<path d="'+d2in+'" fill="none" stroke="'+dark+'" stroke-width="'+sw+'"/>';
-    wedgeMarkup += stippledQBezier(pBaseL, pTip1, pTip2, sw*1.5, sw*0.5, dark);
-    
-    // Layer 3: Overlapping arches (we offset them by half a section)
-    var archR1 = maxR * 0.3, archR2 = maxR * 0.45;
-    var aL = P(cx, cy, archR1, 0);
-    var aR = P(cx, cy, archR1, 360/sections);
-    var aTip = P(cx, cy, archR2, 360/sections*0.5);
-    var archD = 'M '+aL.x+' '+aL.y+' Q '+P(cx,cy,archR1*1.2, 0).x+' '+P(cx,cy,archR1*1.2, 0).y+' '+aTip.x+' '+aTip.y+' Q '+P(cx,cy,archR1*1.2, 360/sections).x+' '+P(cx,cy,archR1*1.2, 360/sections).y+' '+aR.x+' '+aR.y;
-    wedgeMarkup += '<path d="'+archD+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*2)+'"/>';
-    
-    // Layer 4: Large fern leaves
-    var fR1 = maxR * 0.4, fR2 = maxR * 0.8;
-    var fTip = P(cx, cy, fR2, 0);
-    var fL = P(cx, cy, fR1, -360/sections*0.4);
-    var fR = P(cx, cy, fR1, 360/sections*0.4);
-    var fd = 'M '+fL.x+' '+fL.y+' C '+P(cx,cy,fR1*1.2, -360/sections).x+' '+P(cx,cy,fR1*1.2, -360/sections).y+' '+P(cx,cy,fR2*0.8, -360/sections*0.5).x+' '+P(cx,cy,fR2*0.8, -360/sections*0.5).y+' '+fTip.x+' '+fTip.y;
-    fd += ' C '+P(cx,cy,fR2*0.8, 360/sections*0.5).x+' '+P(cx,cy,fR2*0.8, 360/sections*0.5).y+' '+P(cx,cy,fR1*1.2, 360/sections).x+' '+P(cx,cy,fR1*1.2, 360/sections).y+' '+fR.x+' '+fR.y+' Z';
-    wedgeMarkup += '<path d="'+fd+'" fill="'+light+'" stroke="'+dark+'" stroke-width="'+(sw*2)+'"/>';
-    
-    // Fern stripes
-    var numStripes = 8;
-    for(var i=1; i<numStripes; i++){
-       var t = i/numStripes;
-       var cR = fR1 + (fR2 - fR1)*t;
-       var wA = (360/sections*0.4) * (1-t);
-       var sl = P(cx, cy, cR, -wA);
-       var sr = P(cx, cy, cR, wA);
-       var sc = P(cx, cy, cR*1.02, 0); // V-shape
-       wedgeMarkup += '<path d="M '+sl.x+' '+sl.y+' L '+sc.x+' '+sc.y+' L '+sr.x+' '+sr.y+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*1.5)+'"/>';
-    }
-    // Fern central vein
-    wedgeMarkup += '<line x1="'+P(cx,cy,fR1,0).x+'" y1="'+P(cx,cy,fR1,0).y+'" x2="'+fTip.x+'" y2="'+fTip.y+'" stroke="'+dark+'" stroke-width="'+(sw*2)+'"/>';
-    
-    // Layer 5: Outer gothic arches overlapping
-    var oR1 = maxR * 0.75, oR2 = maxR * 0.98;
-    var oL = P(cx, cy, oR1, -360/sections*0.75);
-    var oR = P(cx, cy, oR1, 360/sections*0.75);
-    var oTip = P(cx, cy, oR2, 0);
-    var od = 'M '+oL.x+' '+oL.y+' Q '+P(cx,cy,oR1*1.1, -360/sections*0.7).x+' '+P(cx,cy,oR1*1.1, -360/sections*0.7).y+' '+oTip.x+' '+oTip.y;
-    od += ' Q '+P(cx,cy,oR1*1.1, 360/sections*0.7).x+' '+P(cx,cy,oR1*1.1, 360/sections*0.7).y+' '+oR.x+' '+oR.y+' Z';
-    
-    // Draw outer arches shifted
-    var outerWedge = '<g transform="rotate('+(360/sections*0.5)+' '+cx+' '+cy+')">';
-    outerWedge += '<path d="'+od+'" fill="'+dark+'"/>';
-    // Inner white arch
-    var ioL = P(cx, cy, oR1*1.02, -360/sections*0.6);
-    var ioR = P(cx, cy, oR1*1.02, 360/sections*0.6);
-    var ioTip = P(cx, cy, oR2*0.95, 0);
-    var iod = 'M '+ioL.x+' '+ioL.y+' Q '+P(cx,cy,oR1*1.12, -360/sections*0.5).x+' '+P(cx,cy,oR1*1.12, -360/sections*0.5).y+' '+ioTip.x+' '+ioTip.y;
-    iod += ' Q '+P(cx,cy,oR1*1.12, 360/sections*0.5).x+' '+P(cx,cy,oR1*1.12, 360/sections*0.5).y+' '+ioR.x+' '+ioR.y+' Z';
-    outerWedge += '<path d="'+iod+'" fill="'+light+'"/>';
-    outerWedge += '</g>';
-    
-    for (var s = 0; s < sections; s++){
-      var angle = s * (360/sections) + rotLayer2;
-      content += '<g transform="rotate('+angle+' '+cx+' '+cy+')">' + outerWedge + '</g>';
-    }
-    for (var s = 0; s < sections; s++){
-      var angle = s * (360/sections) + rotLayer1;
-      content += '<g transform="rotate('+angle+' '+cx+' '+cy+')">' + wedgeMarkup + '</g>';
-    }
-    
-    // Calculate cell bounding box and grid
-    var wedgeHalf = 180 / sections;
-    var wedgeHalfRad = wedgeHalf * Math.PI / 180;
-    var geomMaxY = maxR * Math.sin(wedgeHalfRad);
-    var axisY = cy + geomMaxY + size*0.06;
-    var fontSize = size * 0.018;
-    
-    var cellGrid = '';
-    var gridColor = params.strokeStyle !== 'detailed-linework' ? '#888888' : dark;
-    cellGrid += '<line x1="'+cx+'" y1="'+axisY+'" x2="'+(cx + maxR * Math.cos(wedgeHalfRad) + size*0.02)+'" y2="'+axisY+'" stroke="'+gridColor+'" stroke-width="'+(size*0.0015)+'" opacity="0.8"/>';
-    cellGrid += '<line x1="'+cx+'" y1="'+(axisY-size*0.005)+'" x2="'+cx+'" y2="'+(axisY+size*0.005)+'" stroke="'+gridColor+'" stroke-width="'+(size*0.0015)+'"/>';
-    cellGrid += '<text x="'+(cx + fontSize*0.2)+'" y="'+(axisY + fontSize*0.8)+'" fill="'+gridColor+'" font-family="var(--mono)" font-size="'+fontSize+'" transform="rotate(60 '+(cx + fontSize*0.2)+' '+(axisY + fontSize*0.8)+')" text-anchor="start">0'+params.unit+'</text>';
-
-    var maxTextLength = size * 0.12;
-    var textDownExt = maxTextLength * Math.sin(60 * Math.PI/180);
-    var textRightExt = maxTextLength * Math.cos(60 * Math.PI/180);
-    
-    var viewMinX = cx - size*0.05;
-    var viewMaxX = cx + maxR * Math.cos(wedgeHalfRad) + textRightExt + size*0.05;
-    var viewMinY = cy - geomMaxY - size*0.05;
-    var viewMaxY = axisY + textDownExt + size*0.05;
-    var viewW = viewMaxX - viewMinX;
-    var viewH = viewMaxY - viewMinY;
-    if (viewH < viewW * 0.4) {
-       var diff = (viewW * 0.4) - viewH; viewH += diff; viewMinY -= diff/2;
-    }
-    var cellViewBox = viewMinX + ' ' + viewMinY + ' ' + viewW + ' ' + viewH;
-    
-    var finalCellContent = '<rect x="-1000" y="-1000" width="3000" height="3000" fill="'+light+'"/>' + cellGrid + outerWedge + wedgeMarkup;
-
-    return { 
-      content: content, sections: sections, 
-      viewBox: '0 0 '+size+' '+size, cellContent: finalCellContent, cellViewBox: cellViewBox
-    };
-  }
-
-  function generateExactReplica3SVG(params) {
-    var rng = mulberry32(params.seed);
-    var size = params.size * (params.unit === 'in' ? 96 : params.unit === 'cm' ? 37.795 : params.unit === 'mm' ? 3.7795 : 1);
-    var cx = size/2, cy = size/2;
-    var maxR = size * 0.45 * (0.85 + rng()*0.15); // random scale
+    var maxR = size * 0.45 * (0.85 + rng()*0.15);
     var content = '';
     
-    // 8-fold symmetry
-    var sections = 8;
-    var sw = Math.max(0.8, size * 0.0015);
-    var dark = '#000000';
-    var light = '#ffffff';
-    
-    var currentP = currentPalette(rng);
-    if (params.strokeStyle !== 'detailed-linework' && params.strokeStyle !== 'stippled') {
-       if (currentP) {
-         dark = currentP.colors[1] || currentP.colors[0];
-         light = currentP.bg;
-       }
-    }
-    
-    content = '<rect x="0" y="0" width="'+size+'" height="'+size+'" fill="'+light+'"/>';
-    var wedgeMarkup = '';
-    
-    // Central core (R = 0 to 0.15)
-    var cR = maxR * 0.15;
-    content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+cR+'" fill="'+dark+'"/>';
-    // Inner white spirals
-    for(var s=0; s<sections; s++){
-       var a = s * (360/sections);
-       var rad = a*Math.PI/180;
-       var spirald = 'M '+P(cx,cy,cR*0.2,a).x+' '+P(cx,cy,cR*0.2,a).y;
-       spirald += ' Q '+P(cx,cy,cR*0.5,a+45).x+' '+P(cx,cy,cR*0.5,a+45).y;
-       spirald += ' '+P(cx,cy,cR*0.7,a-20).x+' '+P(cx,cy,cR*0.7,a-20).y;
-       content += '<path d="'+spirald+'" fill="none" stroke="'+light+'" stroke-width="'+(sw*1.5)+'"/>';
-       content += '<circle cx="'+P(cx,cy,cR*0.75,a-20).x+'" cy="'+P(cx,cy,cR*0.75,a-20).y+'" r="'+(sw)+'" fill="'+light+'"/>';
-    }
-    // Double ring border
-    content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+cR+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*2)+'"/>';
-    content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+(cR+sw*3)+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*2)+'"/>';
-    // Inner dots ring
-    var dotRingR = cR + sw*6;
-    content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+dotRingR+'" fill="none" stroke="'+dark+'" stroke-width="'+sw+'"/>';
-    for (var d=0; d<64; d++){
-       content += '<circle cx="'+P(cx,cy,dotRingR,d*360/64).x+'" cy="'+P(cx,cy,dotRingR,d*360/64).y+'" r="'+(sw*0.8)+'" fill="'+dark+'"/>';
-    }
-    content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+(dotRingR+sw*3)+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*2)+'"/>';
-
-    // Ring 1: Lotus Petals (R = 0.2 to 0.45)
-    var pR1 = dotRingR + sw*3, pR2 = maxR * 0.45;
-    var petalWedge = '';
-    var ptL = P(cx, cy, pR1, -360/sections*0.5);
-    var ptR = P(cx, cy, pR1, 360/sections*0.5);
-    var ptTip = P(cx, cy, pR2, 0);
-    // Outer petal outline
-    var pdOuter = 'M '+ptL.x+' '+ptL.y+' Q '+P(cx,cy,pR1*1.5,-360/sections*0.45).x+' '+P(cx,cy,pR1*1.5,-360/sections*0.45).y+' '+ptTip.x+' '+ptTip.y;
-    pdOuter += ' Q '+P(cx,cy,pR1*1.5,360/sections*0.45).x+' '+P(cx,cy,pR1*1.5,360/sections*0.45).y+' '+ptR.x+' '+ptR.y+' Z';
-    petalWedge += '<path d="'+pdOuter+'" fill="'+light+'" stroke="'+dark+'" stroke-width="'+(sw*2)+'"/>';
-    // Inner petal outline
-    var ptTipIn = P(cx, cy, pR2 - sw*4, 0);
-    var ptLIn = P(cx, cy, pR1 + sw*2, -360/sections*0.4);
-    var ptRIn = P(cx, cy, pR1 + sw*2, 360/sections*0.4);
-    var pdInner = 'M '+ptLIn.x+' '+ptLIn.y+' Q '+P(cx,cy,pR1*1.4,-360/sections*0.35).x+' '+P(cx,cy,pR1*1.4,-360/sections*0.35).y+' '+ptTipIn.x+' '+ptTipIn.y;
-    pdInner += ' Q '+P(cx,cy,pR1*1.4,360/sections*0.35).x+' '+P(cx,cy,pR1*1.4,360/sections*0.35).y+' '+ptRIn.x+' '+ptRIn.y+' Z';
-    petalWedge += '<path d="'+pdInner+'" fill="none" stroke="'+dark+'" stroke-width="'+sw+'"/>';
-    
-    // Internal lotus motif inside petal
-    var mBase = P(cx, cy, pR1 + sw*5, 0);
-    var mTip = P(cx, cy, pR1 + (pR2-pR1)*0.6, 0);
-    petalWedge += '<path d="M '+mBase.x+' '+mBase.y+' Q '+P(cx,cy,pR1+(pR2-pR1)*0.3,-15).x+' '+P(cx,cy,pR1+(pR2-pR1)*0.3,-15).y+' '+mTip.x+' '+mTip.y;
-    petalWedge += ' Q '+P(cx,cy,pR1+(pR2-pR1)*0.3,15).x+' '+P(cx,cy,pR1+(pR2-pR1)*0.3,15).y+' '+mBase.x+' '+mBase.y+' Z" fill="none" stroke="'+dark+'" stroke-width="'+sw+'"/>';
-    // Center teardrop
-    var tTip = P(cx, cy, pR1 + (pR2-pR1)*0.45, 0);
-    petalWedge += '<path d="M '+mBase.x+' '+mBase.y+' Q '+P(cx,cy,pR1+(pR2-pR1)*0.2,-8).x+' '+P(cx,cy,pR1+(pR2-pR1)*0.2,-8).y+' '+tTip.x+' '+tTip.y;
-    petalWedge += ' Q '+P(cx,cy,pR1+(pR2-pR1)*0.2,8).x+' '+P(cx,cy,pR1+(pR2-pR1)*0.2,8).y+' '+mBase.x+' '+mBase.y+' Z" fill="'+dark+'"/>';
-    
-    wedgeMarkup += petalWedge;
-
-    // Scalloped Border Ring between Petals and Ferns
-    var scalWedge = '';
-    var scalR = pR2;
-    var scalOutR = pR2 + sw*10;
-    var scallCount = 5;
-    for(var sc=0; sc<scallCount; sc++){
-       var angA = -360/sections*0.5 + (sc)*(360/sections/scallCount);
-       var angB = angA + (360/sections/scallCount);
-       var angC = (angA+angB)/2;
-       var pA = P(cx, cy, scalR, angA);
-       var pB = P(cx, cy, scalR, angB);
-       var pC = P(cx, cy, scalOutR, angC);
-       scalWedge += '<path d="M '+pA.x+' '+pA.y+' Q '+pC.x+' '+pC.y+' '+pB.x+' '+pB.y+'" fill="none" stroke="'+dark+'" stroke-width="'+sw+'"/>';
-       var dPt = P(cx, cy, scalR + sw*3, angC);
-       scalWedge += '<circle cx="'+dPt.x+'" cy="'+dPt.y+'" r="'+(sw)+'" fill="'+dark+'"/>';
-    }
-    wedgeMarkup += scalWedge;
-
-    // Outer boundary for scalloped region
-    var scalOuterR = scalOutR + sw*2;
-    var oA = P(cx, cy, scalOuterR, -360/sections*0.5);
-    var oB = P(cx, cy, scalOuterR, 360/sections*0.5);
-    wedgeMarkup += '<path d="M '+oA.x+' '+oA.y+' A '+scalOuterR+' '+scalOuterR+' 0 0 1 '+oB.x+' '+oB.y+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*2)+'"/>';
-    var scalOuterR2 = scalOuterR + sw*3;
-    var oA2 = P(cx, cy, scalOuterR2, -360/sections*0.5);
-    var oB2 = P(cx, cy, scalOuterR2, 360/sections*0.5);
-    wedgeMarkup += '<path d="M '+oA2.x+' '+oA2.y+' A '+scalOuterR2+' '+scalOuterR2+' 0 0 1 '+oB2.x+' '+oB2.y+'" fill="none" stroke="'+dark+'" stroke-width="'+sw+'"/>';
-
-    // Striped Fern Fronds (Angle offset by 360/sections/2)
-    var fernWedge = '<g transform="rotate('+(360/sections*0.5)+' '+cx+' '+cy+')">';
-    var fR1 = scalOuterR2;
-    var fR2 = maxR * 0.9;
-    var fL = P(cx, cy, fR1, -360/sections*0.45);
-    var fR = P(cx, cy, fR1, 360/sections*0.45);
-    var fTip = P(cx, cy, fR2, 0);
-    // Fern outline
-    var fd = 'M '+fL.x+' '+fL.y+' Q '+P(cx,cy,fR1+(fR2-fR1)*0.2,-360/sections*0.5).x+' '+P(cx,cy,fR1+(fR2-fR1)*0.2,-360/sections*0.5).y+' '+fTip.x+' '+fTip.y;
-    fd += ' Q '+P(cx,cy,fR1+(fR2-fR1)*0.2,360/sections*0.5).x+' '+P(cx,cy,fR1+(fR2-fR1)*0.2,360/sections*0.5).y+' '+fR.x+' '+fR.y+' Z';
-    fernWedge += '<path d="'+fd+'" fill="'+light+'" stroke="'+dark+'" stroke-width="'+(sw*2)+'"/>';
-    // Zebra Stripes
-    var numStripes = 8;
-    for(var st=1; st<=numStripes; st++){
-       var t1 = (st-0.5)/numStripes;
-       var t2 = st/numStripes;
-       var sr1 = fR1 + (fR2-fR1)*t1;
-       var sr2 = fR1 + (fR2-fR1)*t2;
-       var angMax = (360/sections*0.45) * (1 - t1);
-       
-       var stL1 = P(cx, cy, sr1, -angMax);
-       var stR1 = P(cx, cy, sr1, angMax);
-       var stL2 = P(cx, cy, sr2, -angMax*0.8);
-       var stR2 = P(cx, cy, sr2, angMax*0.8);
-       
-       var sd = 'M '+stL1.x+' '+stL1.y+' Q '+P(cx,cy,sr1*1.05,0).x+' '+P(cx,cy,sr1*1.05,0).y+' '+stR1.x+' '+stR1.y;
-       sd += ' L '+stR2.x+' '+stR2.y+' Q '+P(cx,cy,sr2*1.05,0).x+' '+P(cx,cy,sr2*1.05,0).y+' '+stL2.x+' '+stL2.y+' Z';
-       fernWedge += '<path d="'+sd+'" fill="'+dark+'"/>';
-    }
-    fernWedge += '</g>';
-    
-    // Gothic Arches (aligned with sections)
-    var gR1 = scalOuterR2;
-    var gR2 = maxR;
-    var gL = P(cx, cy, gR1, -360/sections*0.5);
-    var gR = P(cx, cy, gR1, 360/sections*0.5);
-    var gTip = P(cx, cy, gR2, 0);
-    // Outer arch
-    var gd = 'M '+gL.x+' '+gL.y+' C '+P(cx,cy,gR1*1.3,-360/sections*0.5).x+' '+P(cx,cy,gR1*1.3,-360/sections*0.5).y+' '+P(cx,cy,gR2*0.8,-360/sections*0.1).x+' '+P(cx,cy,gR2*0.8,-360/sections*0.1).y+' '+gTip.x+' '+gTip.y;
-    gd += ' C '+P(cx,cy,gR2*0.8,360/sections*0.1).x+' '+P(cx,cy,gR2*0.8,360/sections*0.1).y+' '+P(cx,cy,gR1*1.3,360/sections*0.5).x+' '+P(cx,cy,gR1*1.3,360/sections*0.5).y+' '+gR.x+' '+gR.y+' Z';
-    wedgeMarkup += '<path d="'+gd+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*2)+'"/>';
-    
-    // Inner arch
-    var gTipIn = P(cx, cy, gR2 - sw*6, 0);
-    var gdIn = 'M '+gL.x+' '+gL.y+' C '+P(cx,cy,gR1*1.3,-360/sections*0.4).x+' '+P(cx,cy,gR1*1.3,-360/sections*0.4).y+' '+P(cx,cy,gR2*0.75,-360/sections*0.1).x+' '+P(cx,cy,gR2*0.75,-360/sections*0.1).y+' '+gTipIn.x+' '+gTipIn.y;
-    gdIn += ' C '+P(cx,cy,gR2*0.75,360/sections*0.1).x+' '+P(cx,cy,gR2*0.75,360/sections*0.1).y+' '+P(cx,cy,gR1*1.3,360/sections*0.4).x+' '+P(cx,cy,gR1*1.3,360/sections*0.4).y+' '+gR.x+' '+gR.y+' Z';
-    wedgeMarkup += '<path d="'+gdIn+'" fill="none" stroke="'+dark+'" stroke-width="'+sw+'"/>';
-
-    // Dense Stippling inside the arch
-    var stipples = '';
-    for(var sdot=0; sdot<150; sdot++){
-       var radT = Math.pow(rng(), 0.5); // favor outer edge
-       var angT = rng() * 2 - 1;
-       var dR = gR1 + (gR2 - sw*10 - gR1) * radT;
-       var dAng = (360/sections*0.45) * angT * (1-radT); 
-       var sPt = P(cx, cy, dR, dAng);
-       stipples += '<circle cx="'+sPt.x+'" cy="'+sPt.y+'" r="'+(sw*0.4)+'" fill="'+dark+'"/>';
-    }
-    wedgeMarkup += stipples;
-
-    // Arch contents: Inner lotus flower + solid black shapes
-    var aLotusBase = P(cx, cy, gR1 + sw*4, 0);
-    var aLotusTip = P(cx, cy, gR1 + (gR2-gR1)*0.3, 0);
-    var alL = P(cx, cy, gR1 + (gR2-gR1)*0.15, -360/sections*0.15);
-    var alR = P(cx, cy, gR1 + (gR2-gR1)*0.15, 360/sections*0.15);
-    
-    wedgeMarkup += '<path d="M '+aLotusBase.x+' '+aLotusBase.y+' Q '+alL.x+' '+alL.y+' '+aLotusTip.x+' '+aLotusTip.y+' Q '+alR.x+' '+alR.y+' '+aLotusBase.x+' '+aLotusBase.y+' Z" fill="'+light+'" stroke="'+dark+'" stroke-width="'+sw+'"/>';
-    
-    // Large black teardrops inside arch
-    var aTDBase = P(cx, cy, gR1 + (gR2-gR1)*0.35, 0);
-    var aTDTip = P(cx, cy, gR2*0.8, 0);
-    var aTDL = P(cx, cy, gR1 + (gR2-gR1)*0.55, -360/sections*0.2);
-    var aTDR = P(cx, cy, gR1 + (gR2-gR1)*0.55, 360/sections*0.2);
-    wedgeMarkup += '<path d="M '+aTDBase.x+' '+aTDBase.y+' Q '+aTDL.x+' '+aTDL.y+' '+aTDTip.x+' '+aTDTip.y+' Q '+aTDR.x+' '+aTDR.y+' '+aTDBase.x+' '+aTDBase.y+' Z" fill="'+dark+'"/>';
-    // White accent in the black teardrop
-    var aTDAcBase = P(cx, cy, gR1 + (gR2-gR1)*0.4, 0);
-    var aTDAcTip = P(cx, cy, gR2*0.7, 0);
-    wedgeMarkup += '<path d="M '+aTDAcBase.x+' '+aTDAcBase.y+' Q '+P(cx,cy,gR1+(gR2-gR1)*0.55, -5).x+' '+P(cx,cy,gR1+(gR2-gR1)*0.55, -5).y+' '+aTDAcTip.x+' '+aTDAcTip.y+' Q '+P(cx,cy,gR1+(gR2-gR1)*0.55, 5).x+' '+P(cx,cy,gR1+(gR2-gR1)*0.55, 5).y+' '+aTDAcBase.x+' '+aTDAcBase.y+' Z" fill="'+light+'"/>';
-
-    // Side black petals next to teardrop
-    var bpLBase = P(cx, cy, gR1 + (gR2-gR1)*0.2, -360/sections*0.1);
-    var bpLTip = P(cx, cy, gR1 + (gR2-gR1)*0.45, -360/sections*0.25);
-    wedgeMarkup += '<path d="M '+bpLBase.x+' '+bpLBase.y+' Q '+P(cx,cy,gR1+(gR2-gR1)*0.3,-360/sections*0.3).x+' '+P(cx,cy,gR1+(gR2-gR1)*0.3,-360/sections*0.3).y+' '+bpLTip.x+' '+bpLTip.y+' Q '+P(cx,cy,gR1+(gR2-gR1)*0.4,-360/sections*0.1).x+' '+P(cx,cy,gR1+(gR2-gR1)*0.4,-360/sections*0.1).y+' '+bpLBase.x+' '+bpLBase.y+' Z" fill="'+dark+'"/>';
-    
-    var bpRBase = P(cx, cy, gR1 + (gR2-gR1)*0.2, 360/sections*0.1);
-    var bpRTip = P(cx, cy, gR1 + (gR2-gR1)*0.45, 360/sections*0.25);
-    wedgeMarkup += '<path d="M '+bpRBase.x+' '+bpRBase.y+' Q '+P(cx,cy,gR1+(gR2-gR1)*0.3,360/sections*0.3).x+' '+P(cx,cy,gR1+(gR2-gR1)*0.3,360/sections*0.3).y+' '+bpRTip.x+' '+bpRTip.y+' Q '+P(cx,cy,gR1+(gR2-gR1)*0.4,360/sections*0.1).x+' '+P(cx,cy,gR1+(gR2-gR1)*0.4,360/sections*0.1).y+' '+bpRBase.x+' '+bpRBase.y+' Z" fill="'+dark+'"/>';
-    
-    // Elegant swirls bridging the arch
-    var swL1 = P(cx, cy, gR1, -360/sections*0.45);
-    var swL2 = P(cx, cy, gR1 + (gR2-gR1)*0.2, -360/sections*0.45);
-    var swL3 = P(cx, cy, gR1 + (gR2-gR1)*0.2, -360/sections*0.3);
-    wedgeMarkup += '<path d="M '+swL1.x+' '+swL1.y+' C '+P(cx,cy,gR1+(gR2-gR1)*0.1,-360/sections*0.45).x+' '+P(cx,cy,gR1+(gR2-gR1)*0.1,-360/sections*0.45).y+' '+swL2.x+' '+swL2.y+' '+swL3.x+' '+swL3.y+'" fill="none" stroke="'+dark+'" stroke-width="'+sw+'"/>';
-    wedgeMarkup += '<circle cx="'+swL3.x+'" cy="'+swL3.y+'" r="'+(sw*1.5)+'" fill="'+dark+'"/>';
-
-    var swR1 = P(cx, cy, gR1, 360/sections*0.45);
-    var swR2 = P(cx, cy, gR1 + (gR2-gR1)*0.2, 360/sections*0.45);
-    var swR3 = P(cx, cy, gR1 + (gR2-gR1)*0.2, 360/sections*0.3);
-    wedgeMarkup += '<path d="M '+swR1.x+' '+swR1.y+' C '+P(cx,cy,gR1+(gR2-gR1)*0.1,360/sections*0.45).x+' '+P(cx,cy,gR1+(gR2-gR1)*0.1,360/sections*0.45).y+' '+swR2.x+' '+swR2.y+' '+swR3.x+' '+swR3.y+'" fill="none" stroke="'+dark+'" stroke-width="'+sw+'"/>';
-    wedgeMarkup += '<circle cx="'+swR3.x+'" cy="'+swR3.y+'" r="'+(sw*1.5)+'" fill="'+dark+'"/>';
-
-    // Outer Finial on Arch tip
-    var finBase = P(cx, cy, gR2, 0);
-    var finTip = P(cx, cy, gR2 + sw*15, 0);
-    var finL = P(cx, cy, gR2 + sw*7.5, -4);
-    var finR = P(cx, cy, gR2 + sw*7.5, 4);
-    wedgeMarkup += '<path d="M '+finBase.x+' '+finBase.y+' Q '+finL.x+' '+finL.y+' '+finTip.x+' '+finTip.y+' Q '+finR.x+' '+finR.y+' '+finBase.x+' '+finBase.y+' Z" fill="'+dark+'"/>';
-    wedgeMarkup += '<circle cx="'+P(cx,cy,gR2+sw*18,0).x+'" cy="'+P(cx,cy,gR2+sw*18,0).y+'" r="'+(sw*2.5)+'" fill="'+dark+'"/>';
-    
-    // Layering order: fern wedges first (so arches overlay them), then arches
-    for (var s = 0; s < sections; s++){
-      var angle = s * (360/sections);
-      content += '<g transform="rotate('+angle+' '+cx+' '+cy+')">' + fernWedge + '</g>';
-    }
-    for (var s = 0; s < sections; s++){
-      var angle = s * (360/sections);
-      content += '<g transform="rotate('+angle+' '+cx+' '+cy+')">' + wedgeMarkup + '</g>';
-    }
-
-    // Cell Preview
-    var wedgeHalf = 180 / sections;
-    var wedgeHalfRad = wedgeHalf * Math.PI / 180;
-    var geomMaxY = maxR * Math.sin(wedgeHalfRad);
-    var axisY = cy + geomMaxY + size*0.06;
-    var fontSize = size * 0.018;
-    
-    var cellGrid = '';
-    var gridColor = params.strokeStyle !== 'detailed-linework' ? '#888888' : dark;
-    cellGrid += '<line x1="'+cx+'" y1="'+axisY+'" x2="'+(cx + maxR * Math.cos(wedgeHalfRad) + size*0.02)+'" y2="'+axisY+'" stroke="'+gridColor+'" stroke-width="'+(size*0.0015)+'" opacity="0.8"/>';
-    cellGrid += '<line x1="'+cx+'" y1="'+(axisY-size*0.005)+'" x2="'+cx+'" y2="'+(axisY+size*0.005)+'" stroke="'+gridColor+'" stroke-width="'+(size*0.0015)+'"/>';
-    cellGrid += '<text x="'+(cx + fontSize*0.2)+'" y="'+(axisY + fontSize*0.8)+'" fill="'+gridColor+'" font-family="var(--mono)" font-size="'+fontSize+'" transform="rotate(60 '+(cx + fontSize*0.2)+' '+(axisY + fontSize*0.8)+')" text-anchor="start">0'+params.unit+'</text>';
-
-    var maxTextLength = size * 0.12;
-    var textDownExt = maxTextLength * Math.sin(60 * Math.PI/180);
-    var textRightExt = maxTextLength * Math.cos(60 * Math.PI/180);
-    
-    var viewMinX = cx - size*0.05;
-    var viewMaxX = cx + maxR * Math.cos(wedgeHalfRad) + textRightExt + size*0.05;
-    var viewMinY = cy - geomMaxY - size*0.05;
-    var viewMaxY = axisY + textDownExt + size*0.05;
-    var viewW = viewMaxX - viewMinX;
-    var viewH = viewMaxY - viewMinY;
-    if (viewH < viewW * 0.4) {
-       var diff = (viewW * 0.4) - viewH; viewH += diff; viewMinY -= diff/2;
-    }
-    var cellViewBox = viewMinX + ' ' + viewMinY + ' ' + viewW + ' ' + viewH;
-    
-    var finalCellContent = '<rect x="-1000" y="-1000" width="3000" height="3000" fill="'+light+'"/>' + cellGrid + fernWedge + wedgeMarkup;
-
-    return { 
-      content: content, sections: sections, 
-      viewBox: '0 0 '+size+' '+size, cellContent: finalCellContent, cellViewBox: cellViewBox
-    };
-  }
-
-  function generateExactReplica4SVG(params) {
-    var rng = mulberry32(params.seed);
-    var size = params.size * (params.unit === 'in' ? 96 : params.unit === 'cm' ? 37.795 : params.unit === 'mm' ? 3.7795 : 1);
-    var cx = size/2, cy = size/2;
-    var maxR = size * 0.45 * (0.85 + rng()*0.15); 
-    var content = '';
-    
-    var sections = 6; // Hexagonal symmetry for peacock
+    var symmetryOptions = [8, 12, 16];
+    var sections = symmetryOptions[Math.floor(rng() * symmetryOptions.length)];
     var sw = Math.max(0.8, size * 0.0015);
     var dark = '#000000', light = '#ffffff';
     var currentP = currentPalette(rng);
@@ -1842,75 +1431,246 @@
     content = '<rect x="0" y="0" width="'+size+'" height="'+size+'" fill="'+light+'"/>';
     var wedgeMarkup = '';
     
-    // Core
-    var cR = maxR * 0.12;
+    var cR = maxR * (0.08 + rng()*0.05);
+    content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+cR+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*2)+'"/>';
+    
+    var layers = 2 + Math.floor(rng()*3);
+    for(var l=0; l<layers; l++){
+        var lr1 = cR + maxR * 0.1 * l;
+        var lr2 = lr1 + maxR * (0.2 + rng()*0.1);
+        if (lr2 > maxR * 0.95) lr2 = maxR * 0.95;
+        
+        var ftL = P(cx, cy, lr1, -360/sections*(0.3 + rng()*0.2));
+        var ftR = P(cx, cy, lr1, 360/sections*(0.3 + rng()*0.2));
+        var ftTip = P(cx, cy, lr2, 0);
+        
+        var fD = 'M '+ftL.x+' '+ftL.y+' Q '+P(cx,cy,lr1+(lr2-lr1)*0.6, -360/sections*0.4).x+' '+P(cx,cy,lr1+(lr2-lr1)*0.6, -360/sections*0.4).y+' '+ftTip.x+' '+ftTip.y;
+        fD += ' Q '+P(cx,cy,lr1+(lr2-lr1)*0.6, 360/sections*0.4).x+' '+P(cx,cy,lr1+(lr2-lr1)*0.6, 360/sections*0.4).y+' '+ftR.x+' '+ftR.y+' Z';
+        wedgeMarkup += '<path d="'+fD+'" fill="'+(rng()>0.5?light:dark)+'" stroke="'+dark+'" stroke-width="'+(sw*2)+'"/>';
+        
+        var vLines = 5 + Math.floor(rng()*5);
+        for(var v=1; v<vLines; v++){
+           var vy = lr1 + (lr2-lr1)*(v/vLines);
+           var p1 = P(cx, cy, vy, -360/sections*0.2 * (1-v/vLines));
+           var p2 = P(cx, cy, vy, 360/sections*0.2 * (1-v/vLines));
+           wedgeMarkup += '<path d="M '+P(cx,cy,lr1,0).x+' '+P(cx,cy,lr1,0).y+' Q '+P(cx,cy,vy-(lr2-lr1)*0.1,0).x+' '+P(cx,cy,vy-(lr2-lr1)*0.1,0).y+' '+p1.x+' '+p1.y+'" fill="none" stroke="'+(rng()>0.5?dark:light)+'" stroke-width="'+sw+'"/>';
+        }
+    }
+    
+    for(var s=0; s<sections; s++) content += '<g transform="rotate('+(s*360/sections)+' '+cx+' '+cy+')">' + wedgeMarkup + '</g>';
+
+    var finalCellContent = '<rect x="-1000" y="-1000" width="3000" height="3000" fill="'+light+'"/>' + wedgeMarkup;
+    return { content: content, sections: sections, viewBox: '0 0 '+size+' '+size, cellContent: finalCellContent, cellViewBox: '0 0 '+size+' '+size };
+  }
+
+  function generateExactReplica3SVG(params) {
+    var rng = mulberry32(params.seed);
+    var size = params.size * (params.unit === 'in' ? 96 : params.unit === 'cm' ? 37.795 : params.unit === 'mm' ? 3.7795 : 1);
+    var cx = size/2, cy = size/2;
+    var maxR = size * 0.45 * (0.85 + rng()*0.15); 
+    var content = '';
+    
+    var symmetryOptions = [6, 8, 10, 12];
+    var sections = symmetryOptions[Math.floor(rng() * symmetryOptions.length)];
+    var sw = Math.max(0.8, size * 0.0015);
+    var dark = '#000000', light = '#ffffff';
+    
+    var currentP = currentPalette(rng);
+    if (params.strokeStyle !== 'detailed-linework' && params.strokeStyle !== 'stippled' && currentP) {
+       dark = currentP.colors[1] || currentP.colors[0]; light = currentP.bg;
+    }
+    content = '<rect x="0" y="0" width="'+size+'" height="'+size+'" fill="'+light+'"/>';
+    var wedgeMarkup = '';
+    
+    var cR = maxR * (0.1 + rng()*0.1);
     content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+cR+'" fill="'+dark+'"/>';
-    for(var s=0; s<sections*2; s++){
-       var a = s * (360/(sections*2));
+    
+    var hasSpirals = rng() > 0.3;
+    if (hasSpirals) {
+       for(var s=0; s<sections; s++){
+          var a = s * (360/sections);
+          var spirald = 'M '+P(cx,cy,cR*0.2,a).x+' '+P(cx,cy,cR*0.2,a).y;
+          spirald += ' Q '+P(cx,cy,cR*0.5,a+45).x+' '+P(cx,cy,cR*0.5,a+45).y;
+          spirald += ' '+P(cx,cy,cR*0.7,a-20).x+' '+P(cx,cy,cR*0.7,a-20).y;
+          content += '<path d="'+spirald+'" fill="none" stroke="'+light+'" stroke-width="'+(sw*1.5)+'"/>';
+          content += '<circle cx="'+P(cx,cy,cR*0.75,a-20).x+'" cy="'+P(cx,cy,cR*0.75,a-20).y+'" r="'+(sw)+'" fill="'+light+'"/>';
+       }
+    }
+    
+    content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+cR+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*2)+'"/>';
+    content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+(cR+sw*3)+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*2)+'"/>';
+    
+    var dotRingR = cR + sw*6;
+    content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+dotRingR+'" fill="none" stroke="'+dark+'" stroke-width="'+sw+'"/>';
+    var dots = sections * (4 + Math.floor(rng()*6));
+    for (var d=0; d<dots; d++){
+       content += '<circle cx="'+P(cx,cy,dotRingR,d*360/dots).x+'" cy="'+P(cx,cy,dotRingR,d*360/dots).y+'" r="'+(sw*0.8)+'" fill="'+dark+'"/>';
+    }
+    content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+(dotRingR+sw*3)+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*2)+'"/>';
+
+    var pR1 = dotRingR + sw*3, pR2 = maxR * (0.35 + rng()*0.15);
+    var ptL = P(cx, cy, pR1, -360/sections*0.5);
+    var ptR = P(cx, cy, pR1, 360/sections*0.5);
+    var ptTip = P(cx, cy, pR2, 0);
+    var fat = 1.0 + rng()*0.5;
+    var pD = 'M '+ptL.x+' '+ptL.y+' C '+P(cx,cy,pR1+(pR2-pR1)*0.2*fat, -360/sections*0.8).x+' '+P(cx,cy,pR1+(pR2-pR1)*0.2*fat, -360/sections*0.8).y+' '+P(cx,cy,pR1+(pR2-pR1)*0.8, -360/sections*0.3).x+' '+P(cx,cy,pR1+(pR2-pR1)*0.8, -360/sections*0.3).y+' '+ptTip.x+' '+ptTip.y;
+    pD += ' C '+P(cx,cy,pR1+(pR2-pR1)*0.8, 360/sections*0.3).x+' '+P(cx,cy,pR1+(pR2-pR1)*0.8, 360/sections*0.3).y+' '+P(cx,cy,pR1+(pR2-pR1)*0.2*fat, 360/sections*0.8).x+' '+P(cx,cy,pR1+(pR2-pR1)*0.2*fat, 360/sections*0.8).y+' '+ptR.x+' '+ptR.y+' Z';
+    wedgeMarkup += '<path d="'+pD+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*3)+'"/>';
+    
+    if (rng() > 0.5) {
+      var tBase = P(cx, cy, pR1 + sw*5, 0);
+      var tTip = P(cx, cy, pR1 + (pR2-pR1)*0.4, 0);
+      var tL = P(cx, cy, pR1 + (pR2-pR1)*0.15, -360/sections*0.1);
+      var tR_ = P(cx, cy, pR1 + (pR2-pR1)*0.15, 360/sections*0.1);
+      var td = 'M '+tBase.x+' '+tBase.y+' Q '+tL.x+' '+tL.y+' '+tTip.x+' '+tTip.y+' Q '+tR_.x+' '+tR_.y+' '+tBase.x+' '+tBase.y+' Z';
+      wedgeMarkup += '<path d="'+td+'" fill="'+dark+'"/>';
+    }
+    
+    var scR = pR2 + sw*8;
+    var scPath = 'M '+P(cx,cy,scR,-360/sections*0.5).x+' '+P(cx,cy,scR,-360/sections*0.5).y;
+    var scTip = P(cx, cy, scR+sw*12, 0);
+    scPath += ' Q '+P(cx,cy,scR+sw*15,-360/sections*0.3).x+' '+P(cx,cy,scR+sw*15,-360/sections*0.3).y+' '+scTip.x+' '+scTip.y;
+    scPath += ' Q '+P(cx,cy,scR+sw*15,360/sections*0.3).x+' '+P(cx,cy,scR+sw*15,360/sections*0.3).y+' '+P(cx,cy,scR,360/sections*0.5).x+' '+P(cx,cy,scR,360/sections*0.5).y;
+    wedgeMarkup += '<path d="'+scPath+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*2)+'"/>';
+    wedgeMarkup += '<circle cx="'+P(cx,cy,scR+sw*6,0).x+'" cy="'+P(cx,cy,scR+sw*6,0).y+'" r="'+(sw*2)+'" fill="'+dark+'"/>';
+
+    var fBaseR = scR + sw*15, fTipR = maxR * (0.8 + rng()*0.1);
+    var fL = P(cx, cy, fBaseR, -360/sections*0.45);
+    var fR = P(cx, cy, fBaseR, 360/sections*0.45);
+    var ftip = P(cx, cy, fTipR, 0);
+    var fd = 'M '+fL.x+' '+fL.y+' Q '+P(cx,cy,fBaseR+(fTipR-fBaseR)*0.5,-360/sections*0.6).x+' '+P(cx,cy,fBaseR+(fTipR-fBaseR)*0.5,-360/sections*0.6).y+' '+ftip.x+' '+ftip.y;
+    fd += ' Q '+P(cx,cy,fBaseR+(fTipR-fBaseR)*0.5,360/sections*0.6).x+' '+P(cx,cy,fBaseR+(fTipR-fBaseR)*0.5,360/sections*0.6).y+' '+fR.x+' '+fR.y+' Z';
+    wedgeMarkup += '<path d="'+fd+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*3)+'"/>';
+    
+    var bands = 15 + Math.floor(rng()*15);
+    for(var b=1; b<bands; b++){
+       if (b%2===0) continue;
+       var br1 = fBaseR + (fTipR-fBaseR)*(b/bands);
+       var br2 = fBaseR + (fTipR-fBaseR)*((b+1)/bands);
+       var bP1 = P(cx, cy, br1, -360/sections*0.45*(1-b/bands));
+       var bP2 = P(cx, cy, br2, -360/sections*0.45*(1-(b+1)/bands));
+       var bP3 = P(cx, cy, br2, 360/sections*0.45*(1-(b+1)/bands));
+       var bP4 = P(cx, cy, br1, 360/sections*0.45*(1-b/bands));
+       var bd = 'M '+bP1.x+' '+bP1.y+' L '+bP2.x+' '+bP2.y+' L '+bP3.x+' '+bP3.y+' L '+bP4.x+' '+bP4.y+' Z';
+       wedgeMarkup += '<path d="'+bd+'" fill="'+dark+'"/>';
+    }
+
+    var gaBaseR = fTipR, gaTipR = maxR;
+    var gaL = P(cx, cy, gaBaseR, -360/sections*0.5);
+    var gaR = P(cx, cy, gaBaseR, 360/sections*0.5);
+    var gaTip = P(cx, cy, gaTipR, 0);
+    var gaF = 1.0 + rng()*0.5;
+    var gaD = 'M '+gaL.x+' '+gaL.y+' C '+P(cx,cy,gaBaseR+(gaTipR-gaBaseR)*0.2*gaF, -360/sections*0.7).x+' '+P(cx,cy,gaBaseR+(gaTipR-gaBaseR)*0.2*gaF, -360/sections*0.7).y+' '+P(cx,cy,gaBaseR+(gaTipR-gaBaseR)*0.8, -360/sections*0.1).x+' '+P(cx,cy,gaBaseR+(gaTipR-gaBaseR)*0.8, -360/sections*0.1).y+' '+gaTip.x+' '+gaTip.y;
+    gaD += ' C '+P(cx,cy,gaBaseR+(gaTipR-gaBaseR)*0.8, 360/sections*0.1).x+' '+P(cx,cy,gaBaseR+(gaTipR-gaBaseR)*0.8, 360/sections*0.1).y+' '+P(cx,cy,gaBaseR+(gaTipR-gaBaseR)*0.2*gaF, 360/sections*0.7).x+' '+P(cx,cy,gaBaseR+(gaTipR-gaBaseR)*0.2*gaF, 360/sections*0.7).y+' '+gaR.x+' '+gaR.y+' Z';
+    wedgeMarkup += '<path d="'+gaD+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*4)+'"/>';
+    
+    var stipC = 60 + Math.floor(rng()*80);
+    var stips = '';
+    for(var sd=0; sd<stipC; sd++){
+       var sr = gaBaseR + (gaTipR - gaBaseR)*rng();
+       var sa = (rng()*2-1)*(360/sections*0.5) * (1 - (sr-gaBaseR)/(gaTipR-gaBaseR));
+       stips += '<circle cx="'+P(cx,cy,sr,sa).x+'" cy="'+P(cx,cy,sr,sa).y+'" r="'+(sw*0.7)+'" fill="'+dark+'"/>';
+    }
+    wedgeMarkup += stips;
+
+    if (rng() > 0.5) {
+       var tB = P(cx, cy, gaBaseR + sw*5, 0);
+       var tT = P(cx, cy, gaBaseR + (gaTipR-gaBaseR)*0.4, 0);
+       var td2 = 'M '+tB.x+' '+tB.y+' Q '+P(cx,cy,gaBaseR+(gaTipR-gaBaseR)*0.2,-360/sections*0.1).x+' '+P(cx,cy,gaBaseR+(gaTipR-gaBaseR)*0.2,-360/sections*0.1).y+' '+tT.x+' '+tT.y+' Q '+P(cx,cy,gaBaseR+(gaTipR-gaBaseR)*0.2,360/sections*0.1).x+' '+P(cx,cy,gaBaseR+(gaTipR-gaBaseR)*0.2,360/sections*0.1).y+' '+tB.x+' '+tB.y+' Z';
+       wedgeMarkup += '<path d="'+td2+'" fill="'+dark+'"/>';
+    }
+    
+    for(var s=0; s<sections; s++) content += '<g transform="rotate('+(s*360/sections)+' '+cx+' '+cy+')">' + wedgeMarkup + '</g>';
+
+    var finalCellContent = '<rect x="-1000" y="-1000" width="3000" height="3000" fill="'+light+'"/>' + wedgeMarkup;
+    return { content: content, sections: sections, viewBox: '0 0 '+size+' '+size, cellContent: finalCellContent, cellViewBox: '0 0 '+size+' '+size };
+  }
+
+  function generateExactReplica4SVG(params) {
+    var rng = mulberry32(params.seed);
+    var size = params.size * (params.unit === 'in' ? 96 : params.unit === 'cm' ? 37.795 : params.unit === 'mm' ? 3.7795 : 1);
+    var cx = size/2, cy = size/2;
+    var maxR = size * 0.45 * (0.85 + rng()*0.15); 
+    var content = '';
+    
+    var symmetryOptions = [6, 8, 10];
+    var sections = symmetryOptions[Math.floor(rng() * symmetryOptions.length)];
+    var sw = Math.max(0.8, size * 0.0015);
+    var dark = '#000000', light = '#ffffff';
+    var currentP = currentPalette(rng);
+    if (params.strokeStyle !== 'detailed-linework' && params.strokeStyle !== 'stippled' && currentP) {
+       dark = currentP.colors[1] || currentP.colors[0]; light = currentP.bg;
+    }
+    content = '<rect x="0" y="0" width="'+size+'" height="'+size+'" fill="'+light+'"/>';
+    var wedgeMarkup = '';
+    
+    var cR = maxR * (0.1 + rng()*0.05);
+    content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+cR+'" fill="'+dark+'"/>';
+    var inDots = 10 + Math.floor(rng()*10);
+    for(var s=0; s<sections*inDots; s++){
+       var a = s * (360/(sections*inDots));
        content += '<circle cx="'+P(cx,cy,cR*0.6,a).x+'" cy="'+P(cx,cy,cR*0.6,a).y+'" r="'+(sw*2)+'" fill="'+light+'"/>';
     }
     content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+(cR+sw*4)+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*2)+'"/>';
 
-    // Peacock Feathers Ring
-    var fR1 = cR + sw*8, fR2 = maxR * 0.55;
+    var fR1 = cR + sw*8, fR2 = maxR * (0.45 + rng()*0.15);
     var pWedge = '';
     var fBase = P(cx, cy, fR1, 0);
     var fTip = P(cx, cy, fR2, 0);
     var fL = P(cx, cy, fR1 + (fR2-fR1)*0.5, -360/sections*0.4);
     var fR = P(cx, cy, fR1 + (fR2-fR1)*0.5, 360/sections*0.4);
     
-    // Feather outline
     var pD = 'M '+fBase.x+' '+fBase.y+' C '+fL.x+' '+fL.y+' '+P(cx,cy,fR2,-10).x+' '+P(cx,cy,fR2,-10).y+' '+fTip.x+' '+fTip.y;
     pD += ' C '+P(cx,cy,fR2,10).x+' '+P(cx,cy,fR2,10).y+' '+fR.x+' '+fR.y+' '+fBase.x+' '+fBase.y+' Z';
     pWedge += '<path d="'+pD+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*2)+'"/>';
     
-    // Feather eye (teardrop)
     var eyeBase = P(cx, cy, fR1 + (fR2-fR1)*0.6, 0);
-    var eyeTip = P(cx, cy, fR2 - sw*6, 0);
+    var eyeTip = P(cx, cy, fR2 - sw*(4+rng()*4), 0);
     var eyeL = P(cx, cy, fR1 + (fR2-fR1)*0.75, -12);
     var eyeR = P(cx, cy, fR1 + (fR2-fR1)*0.75, 12);
     var eD = 'M '+eyeBase.x+' '+eyeBase.y+' Q '+eyeL.x+' '+eyeL.y+' '+eyeTip.x+' '+eyeTip.y;
     eD += ' Q '+eyeR.x+' '+eyeR.y+' '+eyeBase.x+' '+eyeBase.y+' Z';
     pWedge += '<path d="'+eD+'" fill="'+dark+'"/>';
     
-    // Inner feather lines
-    for(var j=1; j<=5; j++){
-       var jl = fR1 + (fR2-fR1)*0.6*(j/6);
+    var innerL = 3 + Math.floor(rng()*4);
+    for(var j=1; j<=innerL; j++){
+       var jl = fR1 + (fR2-fR1)*0.6*(j/(innerL+1));
        var lp1 = P(cx, cy, fR1, 0);
-       var lp2 = P(cx, cy, jl, 0);
-       var p1 = P(cx, cy, fR1+(fR2-fR1)*0.3, -360/sections*0.2*(j/5));
-       var p2 = P(cx, cy, fR1+(fR2-fR1)*0.3, 360/sections*0.2*(j/5));
+       var p1 = P(cx, cy, fR1+(fR2-fR1)*0.3, -360/sections*0.2*(j/(innerL)));
+       var p2 = P(cx, cy, fR1+(fR2-fR1)*0.3, 360/sections*0.2*(j/(innerL)));
        pWedge += '<path d="M '+lp1.x+' '+lp1.y+' Q '+p1.x+' '+p1.y+' '+P(cx,cy,jl,-8).x+' '+P(cx,cy,jl,-8).y+'" fill="none" stroke="'+dark+'" stroke-width="'+sw+'"/>';
        pWedge += '<path d="M '+lp1.x+' '+lp1.y+' Q '+p2.x+' '+p2.y+' '+P(cx,cy,jl,8).x+' '+P(cx,cy,jl,8).y+'" fill="none" stroke="'+dark+'" stroke-width="'+sw+'"/>';
     }
 
-    // Outer layered arches (Mehndi style)
-    var aR1 = maxR * 0.55, aR2 = maxR * 0.95;
-    var aL = P(cx, cy, aR1, -360/sections*0.5);
-    var aR = P(cx, cy, aR1, 360/sections*0.5);
-    var aTip = P(cx, cy, aR2, 0);
-    var aD = 'M '+aL.x+' '+aL.y+' Q '+P(cx,cy,aR1+(aR2-aR1)*0.4, -360/sections*0.5).x+' '+P(cx,cy,aR1+(aR2-aR1)*0.4, -360/sections*0.5).y+' '+aTip.x+' '+aTip.y;
-    aD += ' Q '+P(cx,cy,aR1+(aR2-aR1)*0.4, 360/sections*0.5).x+' '+P(cx,cy,aR1+(aR2-aR1)*0.4, 360/sections*0.5).y+' '+aR.x+' '+aR.y+' Z';
-    pWedge += '<path d="'+aD+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*3)+'"/>';
-    // Inner offset arch
-    var aDIn = 'M '+aL.x+' '+aL.y+' Q '+P(cx,cy,aR1+(aR2-aR1)*0.3, -360/sections*0.4).x+' '+P(cx,cy,aR1+(aR2-aR1)*0.3, -360/sections*0.4).y+' '+P(cx,cy,aR2-sw*8,0).x+' '+P(cx,cy,aR2-sw*8,0).y;
-    aDIn += ' Q '+P(cx,cy,aR1+(aR2-aR1)*0.3, 360/sections*0.4).x+' '+P(cx,cy,aR1+(aR2-aR1)*0.3, 360/sections*0.4).y+' '+aR.x+' '+aR.y+' Z';
+    var aR1 = fR2, aR2 = maxR * (0.85 + rng()*0.1);
+    var aL_ = P(cx, cy, aR1, -360/sections*0.5);
+    var aR_ = P(cx, cy, aR1, 360/sections*0.5);
+    var aTip_ = P(cx, cy, aR2, 0);
+    var fat = 1.0 + rng()*0.5;
+    var aD2 = 'M '+aL_.x+' '+aL_.y+' Q '+P(cx,cy,aR1+(aR2-aR1)*0.4*fat, -360/sections*0.5).x+' '+P(cx,cy,aR1+(aR2-aR1)*0.4*fat, -360/sections*0.5).y+' '+aTip_.x+' '+aTip_.y;
+    aD2 += ' Q '+P(cx,cy,aR1+(aR2-aR1)*0.4*fat, 360/sections*0.5).x+' '+P(cx,cy,aR1+(aR2-aR1)*0.4*fat, 360/sections*0.5).y+' '+aR_.x+' '+aR_.y+' Z';
+    pWedge += '<path d="'+aD2+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*3)+'"/>';
+    
+    var aDIn = 'M '+aL_.x+' '+aL_.y+' Q '+P(cx,cy,aR1+(aR2-aR1)*0.3*fat, -360/sections*0.4).x+' '+P(cx,cy,aR1+(aR2-aR1)*0.3*fat, -360/sections*0.4).y+' '+P(cx,cy,aR2-sw*8,0).x+' '+P(cx,cy,aR2-sw*8,0).y;
+    aDIn += ' Q '+P(cx,cy,aR1+(aR2-aR1)*0.3*fat, 360/sections*0.4).x+' '+P(cx,cy,aR1+(aR2-aR1)*0.3*fat, 360/sections*0.4).y+' '+aR_.x+' '+aR_.y+' Z';
     pWedge += '<path d="'+aDIn+'" fill="none" stroke="'+dark+'" stroke-width="'+sw+'"/>';
 
-    // Dense Mehndi fill (circles and stippling)
-    var stips = '';
-    for(var sd=0; sd<120; sd++){
-       var sr = aR1 + (aR2 - aR1)*rng();
-       var sa = (rng()*2-1)*(360/sections*0.45) * (1 - (sr-aR1)/(aR2-aR1));
-       stips += '<circle cx="'+P(cx,cy,sr,sa).x+'" cy="'+P(cx,cy,sr,sa).y+'" r="'+(sw*0.5)+'" fill="'+dark+'"/>';
+    var stips2 = '';
+    var stipCount = 80 + Math.floor(rng()*100);
+    for(var sd2=0; sd2<stipCount; sd2++){
+       var sr2 = aR1 + (aR2 - aR1)*rng();
+       var sa2 = (rng()*2-1)*(360/sections*0.45) * (1 - (sr2-aR1)/(aR2-aR1));
+       stips2 += '<circle cx="'+P(cx,cy,sr2,sa2).x+'" cy="'+P(cx,cy,sr2,sa2).y+'" r="'+(sw*0.5)+'" fill="'+dark+'"/>';
     }
-    pWedge += stips;
+    pWedge += stips2;
 
-    // Small flower in arch tip
-    var flBase = P(cx, cy, aR2 - sw*35, 0);
-    pWedge += '<circle cx="'+flBase.x+'" cy="'+flBase.y+'" r="'+(sw*4)+'" fill="'+dark+'"/>';
-    for(var fl=0; fl<6; fl++){
-       pWedge += '<circle cx="'+P(cx,cy,aR2-sw*35+sw*6,fl*60).x+'" cy="'+P(cx,cy,aR2-sw*35+sw*6,fl*60).y+'" r="'+(sw*2)+'" fill="none" stroke="'+dark+'" stroke-width="'+sw+'"/>';
+    if (rng() > 0.3) {
+       var flBase = P(cx, cy, aR2 - sw*35, 0);
+       pWedge += '<circle cx="'+flBase.x+'" cy="'+flBase.y+'" r="'+(sw*4)+'" fill="'+dark+'"/>';
+       var ptls = 4 + Math.floor(rng()*4);
+       for(var fl=0; fl<ptls; fl++){
+          pWedge += '<circle cx="'+P(cx,cy,aR2-sw*35+sw*6,fl*(360/ptls)).x+'" cy="'+P(cx,cy,aR2-sw*35+sw*6,fl*(360/ptls)).y+'" r="'+(sw*2)+'" fill="none" stroke="'+dark+'" stroke-width="'+sw+'"/>';
+       }
     }
 
     wedgeMarkup += pWedge;
@@ -1926,7 +1686,9 @@
     var cx = size/2, cy = size/2;
     var maxR = size * 0.45 * (0.85 + rng()*0.15); 
     var content = '';
-    var sections = 12; // 12-point sunburst
+    
+    var symmetryOptions = [8, 10, 12, 16];
+    var sections = symmetryOptions[Math.floor(rng() * symmetryOptions.length)];
     var sw = Math.max(0.8, size * 0.0015);
     var dark = '#000000', light = '#ffffff';
     var currentP = currentPalette(rng);
@@ -1935,57 +1697,56 @@
     }
     content = '<rect x="0" y="0" width="'+size+'" height="'+size+'" fill="'+light+'"/>';
     var wedgeMarkup = '';
-    var altWedgeMarkup = ''; // For alternating rays
+    var altWedgeMarkup = '';
 
-    // Center Sun Core
-    var cR = maxR * 0.2;
+    var cR = maxR * (0.15 + rng()*0.1);
     content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+cR+'" fill="'+dark+'"/>';
     content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+(cR*0.8)+'" fill="none" stroke="'+light+'" stroke-width="'+(sw*2)+'"/>';
-    // Sun face dots
-    for(var d=0; d<12; d++){
-       var dp = P(cx, cy, cR*0.6, d*30);
+    
+    var dCount = 8 + Math.floor(rng()*8);
+    for(var d=0; d<dCount; d++){
+       var dp = P(cx, cy, cR*0.6, d*(360/dCount));
        content += '<circle cx="'+dp.x+'" cy="'+dp.y+'" r="'+(sw*1.5)+'" fill="'+light+'"/>';
     }
 
-    // Concentric glowing rings
-    for(var r=1; r<=3; r++){
+    var ringCount = 1 + Math.floor(rng()*3);
+    for(var r=1; r<=ringCount; r++){
        var rR = cR + sw*r*6;
        content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+rR+'" fill="none" stroke="'+dark+'" stroke-width="'+sw+'" stroke-dasharray="'+(sw*r)+' '+(sw*r)+'"/>';
     }
 
-    // Sun Rays (Alternating thick solid and thin outline)
-    var rayBaseR = cR + sw*20;
-    var rayTipR = maxR * 0.85;
-    var rayTipLongR = maxR * 0.95;
+    var rayBaseR = cR + sw*(10 + rng()*15);
+    var rayTipR = maxR * (0.7 + rng()*0.15);
+    var rayTipLongR = maxR * (0.9 + rng()*0.1);
     
-    // Solid Black Ray (Wedge 1)
     var r1L = P(cx, cy, rayBaseR, -360/sections*0.25);
     var r1R = P(cx, cy, rayBaseR, 360/sections*0.25);
     var r1Tip = P(cx, cy, rayTipLongR, 0);
     var r1d = 'M '+r1L.x+' '+r1L.y+' L '+r1Tip.x+' '+r1Tip.y+' L '+r1R.x+' '+r1R.y+' Z';
     wedgeMarkup += '<path d="'+r1d+'" fill="'+dark+'"/>';
-    // White inner accent
     var r1dIn = 'M '+P(cx,cy,rayBaseR+sw*5,0).x+' '+P(cx,cy,rayBaseR+sw*5,0).y+' L '+P(cx,cy,rayTipLongR-sw*15,0).x+' '+P(cx,cy,rayTipLongR-sw*15,0).y;
     wedgeMarkup += '<path d="'+r1dIn+'" fill="none" stroke="'+light+'" stroke-width="'+(sw*2)+'"/>';
 
-    // Thin Outline Ray (Wedge 2)
     var r2L = P(cx, cy, rayBaseR, -360/sections*0.2);
     var r2R = P(cx, cy, rayBaseR, 360/sections*0.2);
     var r2Tip = P(cx, cy, rayTipR, 0);
     var r2d = 'M '+r2L.x+' '+r2L.y+' L '+r2Tip.x+' '+r2Tip.y+' L '+r2R.x+' '+r2R.y+' Z';
     altWedgeMarkup += '<path d="'+r2d+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*2)+'"/>';
-    // Crescent moons inside the thin rays
-    var mOut = P(cx, cy, rayBaseR + (rayTipR-rayBaseR)*0.4, 0);
-    var mIn = P(cx, cy, rayBaseR + (rayTipR-rayBaseR)*0.4 - sw*5, 0);
-    var mR = sw*15;
-    var mPath = 'M '+mOut.x+' '+(mOut.y-mR)+' A '+mR+' '+mR+' 0 1 1 '+mOut.x+' '+(mOut.y+mR)+' A '+(mR*0.8)+' '+(mR*0.8)+' 0 1 0 '+mOut.x+' '+(mOut.y-mR)+' Z';
-    altWedgeMarkup += '<path d="'+mPath+'" fill="'+dark+'"/>';
     
-    // Floating stars
-    wedgeMarkup += '<circle cx="'+P(cx,cy,maxR,0).x+'" cy="'+P(cx,cy,maxR,0).y+'" r="'+(sw*2)+'" fill="'+dark+'"/>';
-    var stL = P(cx, cy, rayTipR + sw*10, -10);
-    var stR = P(cx, cy, rayTipR + sw*10, 10);
-    altWedgeMarkup += '<path d="M '+stL.x+' '+stL.y+' L '+P(cx,cy,rayTipR+sw*12,0).x+' '+P(cx,cy,rayTipR+sw*12,0).y+' L '+stR.x+' '+stR.y+' Z" fill="'+dark+'"/>';
+    if (rng() > 0.3) {
+       var mOut = P(cx, cy, rayBaseR + (rayTipR-rayBaseR)*0.4, 0);
+       var mIn = P(cx, cy, rayBaseR + (rayTipR-rayBaseR)*0.4 - sw*5, 0);
+       var mR = sw*15;
+       var mPath = 'M '+mOut.x+' '+(mOut.y-mR)+' A '+mR+' '+mR+' 0 1 1 '+mOut.x+' '+(mOut.y+mR)+' A '+(mR*0.8)+' '+(mR*0.8)+' 0 1 0 '+mOut.x+' '+(mOut.y-mR)+' Z';
+       altWedgeMarkup += '<path d="'+mPath+'" fill="'+dark+'"/>';
+    }
+    
+    if (rng() > 0.4) {
+       wedgeMarkup += '<circle cx="'+P(cx,cy,maxR,0).x+'" cy="'+P(cx,cy,maxR,0).y+'" r="'+(sw*2)+'" fill="'+dark+'"/>';
+       var stL = P(cx, cy, rayTipR + sw*10, -10);
+       var stR = P(cx, cy, rayTipR + sw*10, 10);
+       altWedgeMarkup += '<path d="M '+stL.x+' '+stL.y+' L '+P(cx,cy,rayTipR+sw*12,0).x+' '+P(cx,cy,rayTipR+sw*12,0).y+' L '+stR.x+' '+stR.y+' Z" fill="'+dark+'"/>';
+    }
     
     for(var s=0; s<sections; s++){
       var angle = s * (360/sections);
@@ -2003,7 +1764,9 @@
     var cx = size/2, cy = size/2;
     var maxR = size * 0.45 * (0.85 + rng()*0.15); 
     var content = '';
-    var sections = 8; 
+    
+    var symmetryOptions = [6, 8, 10];
+    var sections = symmetryOptions[Math.floor(rng() * symmetryOptions.length)];
     var sw = Math.max(0.8, size * 0.0015);
     var dark = '#000000', light = '#ffffff';
     var currentP = currentPalette(rng);
@@ -2014,46 +1777,43 @@
     var wedgeMarkup = '';
     var offWedge = ''; 
     
-    // Core Octagram
-    var cR1 = maxR * 0.15, cR2 = maxR * 0.25;
+    var cR1 = maxR * (0.1 + rng()*0.1), cR2 = maxR * (0.2 + rng()*0.1);
     for(var s=0; s<sections; s++){
        var a1 = s * (360/sections);
        var a2 = (s+0.5) * (360/sections);
        var a3 = (s+1) * (360/sections);
        var od = 'M '+P(cx,cy,cR1,a1).x+' '+P(cx,cy,cR1,a1).y+' L '+P(cx,cy,cR2,a2).x+' '+P(cx,cy,cR2,a2).y+' L '+P(cx,cy,cR1,a3).x+' '+P(cx,cy,cR1,a3).y+' Z';
        content += '<path d="'+od+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*3)+'"/>';
-       content += '<circle cx="'+P(cx,cy,cR2*0.6,a1).x+'" cy="'+P(cx,cy,cR2*0.6,a1).y+'" r="'+(sw*1.5)+'" fill="'+dark+'"/>';
+       if (rng() > 0.2) content += '<circle cx="'+P(cx,cy,cR2*0.6,a1).x+'" cy="'+P(cx,cy,cR2*0.6,a1).y+'" r="'+(sw*1.5)+'" fill="'+dark+'"/>';
     }
     
-    // Trefoils (Cathedral Rose arches)
-    var tR1 = cR2, tR2 = maxR * 0.6;
+    var tR1 = cR2, tR2 = maxR * (0.5 + rng()*0.15);
     var tL = P(cx, cy, tR1, -360/sections*0.5);
     var tR = P(cx, cy, tR1, 360/sections*0.5);
     var tTip = P(cx, cy, tR2, 0);
-    // Outer cathedral arch
-    var tD = 'M '+tL.x+' '+tL.y+' C '+P(cx,cy,tR1*1.5, -360/sections*0.6).x+' '+P(cx,cy,tR1*1.5, -360/sections*0.6).y+' '+P(cx,cy,tR2*0.7, -360/sections*0.2).x+' '+P(cx,cy,tR2*0.7, -360/sections*0.2).y+' '+tTip.x+' '+tTip.y;
-    tD += ' C '+P(cx,cy,tR2*0.7, 360/sections*0.2).x+' '+P(cx,cy,tR2*0.7, 360/sections*0.2).y+' '+P(cx,cy,tR1*1.5, 360/sections*0.6).x+' '+P(cx,cy,tR1*1.5, 360/sections*0.6).y+' '+tR.x+' '+tR.y+' Z';
+    var fat2 = 1.0 + rng()*0.5;
+    var tD = 'M '+tL.x+' '+tL.y+' C '+P(cx,cy,tR1*1.5, -360/sections*0.6*fat2).x+' '+P(cx,cy,tR1*1.5, -360/sections*0.6*fat2).y+' '+P(cx,cy,tR2*0.7, -360/sections*0.2).x+' '+P(cx,cy,tR2*0.7, -360/sections*0.2).y+' '+tTip.x+' '+tTip.y;
+    tD += ' C '+P(cx,cy,tR2*0.7, 360/sections*0.2).x+' '+P(cx,cy,tR2*0.7, 360/sections*0.2).y+' '+P(cx,cy,tR1*1.5, 360/sections*0.6*fat2).x+' '+P(cx,cy,tR1*1.5, 360/sections*0.6*fat2).y+' '+tR.x+' '+tR.y+' Z';
     wedgeMarkup += '<path d="'+tD+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*4)+'"/>';
     
-    // Inner trefoil elements
     var cA = P(cx, cy, tR1 + (tR2-tR1)*0.35, -360/sections*0.2);
     var cB = P(cx, cy, tR1 + (tR2-tR1)*0.35, 360/sections*0.2);
     var cC = P(cx, cy, tR1 + (tR2-tR1)*0.65, 0);
-    var trR = sw*12;
+    var trR = sw*(8+rng()*6);
     wedgeMarkup += '<circle cx="'+cA.x+'" cy="'+cA.y+'" r="'+trR+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*2)+'"/>';
     wedgeMarkup += '<circle cx="'+cB.x+'" cy="'+cB.y+'" r="'+trR+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*2)+'"/>';
     wedgeMarkup += '<circle cx="'+cC.x+'" cy="'+cC.y+'" r="'+trR+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*2)+'"/>';
     
-    // Solid black background (mullions)
     var mR1 = tR2, mR2 = maxR;
     var mL = P(cx, cy, mR1, -360/sections*0.5);
     var mR_p = P(cx, cy, mR1, 360/sections*0.5);
     var mTip = P(cx, cy, mR2, 0);
     var mD = 'M '+mL.x+' '+mL.y+' L '+mTip.x+' '+mTip.y+' L '+mR_p.x+' '+mR_p.y+' Z';
     offWedge += '<path d="'+mD+'" fill="'+dark+'"/>';
-    var glassL = P(cx, cy, mR1 + sw*8, -360/sections*0.4);
-    var glassR = P(cx, cy, mR1 + sw*8, 360/sections*0.4);
-    var glassTip = P(cx, cy, mR2 - sw*12, 0);
+    var glassThick = sw * (4 + rng()*6);
+    var glassL = P(cx, cy, mR1 + glassThick, -360/sections*0.4);
+    var glassR = P(cx, cy, mR1 + glassThick, 360/sections*0.4);
+    var glassTip = P(cx, cy, mR2 - glassThick*1.5, 0);
     var glassD = 'M '+glassL.x+' '+glassL.y+' L '+glassTip.x+' '+glassTip.y+' L '+glassR.x+' '+glassR.y+' Z';
     offWedge += '<path d="'+glassD+'" fill="'+light+'"/>';
 
@@ -2734,183 +2494,64 @@
   
   function generateExactReplicaSVG(params) {
     var rng = mulberry32(params.seed);
-    var conversion = { px: 1, in: 96, cm: 37.795, mm: 3.7795 };
-    var sizePx = params.size * conversion[params.unit];
-    var size = sizePx; // needed for inner logic
-    var cx = sizePx/2, cy = sizePx/2;
+    var size = params.size * (params.unit === 'in' ? 96 : params.unit === 'cm' ? 37.795 : params.unit === 'mm' ? 3.7795 : 1);
+    var cx = size/2, cy = size/2;
+    var maxR = size * 0.45 * (0.85 + rng()*0.15); 
     var content = '';
-    var cellContent = '';
     
-    // Pick colors dynamically from selected palette, but shuffle them based on seed for evolve
-    var bg = params.palette.bg;
-    content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+(sizePx*0.48)+'" fill="'+bg+'"/>';
+    var symmetryOptions = [6, 8, 10, 12, 16];
+    var sections = symmetryOptions[Math.floor(rng() * symmetryOptions.length)];
+    var sw = Math.max(0.8, size * 0.0015);
+    var dark = '#000000', light = '#ffffff';
     
-    var pColors = params.palette.colors.slice();
-    // Fill to ensure we have at least 4 roles
-    while(pColors.length < 4) { pColors.push(pick(rng, pColors)); }
-    
-    // Shuffle the palette assignments based on seed so evolve shifts colors
-    for(var i=pColors.length-1; i>0; i--) {
-        var j = Math.floor(rng() * (i + 1));
-        var temp = pColors[i]; pColors[i] = pColors[j]; pColors[j] = temp;
+    var currentP = currentPalette(rng);
+    if (params.strokeStyle !== 'detailed-linework' && params.strokeStyle !== 'stippled' && currentP) {
+       dark = currentP.colors[1] || currentP.colors[0]; light = currentP.bg;
     }
+    content = '<rect x="0" y="0" width="'+size+'" height="'+size+'" fill="'+light+'"/>';
+    var wedgeMarkup = '';
     
-    var gold = pColors[0];
-    var cyan = pColors[1];
-    var blue = pColors[2];
-    var white = pColors[3];
+    var cR = maxR * (0.05 + rng()*0.05);
+    content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+cR+'" fill="'+dark+'"/>';
+    content += '<circle cx="'+cx+'" cy="'+cy+'" r="'+(cR+sw*4)+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*2)+'"/>';
+
+    var pRadius = cR + maxR * (0.1 + rng()*0.2);
+    var pTipFactor = 1.0 + rng()*0.5;
+
+    var pR1 = cR + sw*8, pR2 = pRadius;
+    var ptL = P(cx, cy, pR1, -360/sections*0.4);
+    var ptR = P(cx, cy, pR1, 360/sections*0.4);
+    var ptTip = P(cx, cy, pR2, 0);
+    var pD = 'M '+ptL.x+' '+ptL.y+' Q '+P(cx,cy,pR1+(pR2-pR1)*pTipFactor, -360/sections*0.3).x+' '+P(cx,cy,pR1+(pR2-pR1)*pTipFactor, -360/sections*0.3).y+' '+ptTip.x+' '+ptTip.y;
+    pD += ' Q '+P(cx,cy,pR1+(pR2-pR1)*pTipFactor, 360/sections*0.3).x+' '+P(cx,cy,pR1+(pR2-pR1)*pTipFactor, 360/sections*0.3).y+' '+ptR.x+' '+ptR.y+' Z';
+    wedgeMarkup += '<path d="'+pD+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*3)+'"/>';
     
-    // Evolve slightly mutates sections
-    var possibleSections = [6, 8, 8, 10, 12];
-    var sections = possibleSections[Math.floor(rng() * possibleSections.length)];
-    var wedgeHalf = 180 / sections;
-    var wedgeHalfRad = wedgeHalf * Math.PI / 180;
+    var aR1 = pR2 + sw*10, aR2 = maxR * (0.8 + rng()*0.15);
+    var aL = P(cx, cy, aR1, -360/sections*0.5);
+    var aR = P(cx, cy, aR1, 360/sections*0.5);
+    var aTip = P(cx, cy, aR2, 0);
+    var aD = 'M '+aL.x+' '+aL.y+' Q '+P(cx,cy,aR1+(aR2-aR1)*0.5, -360/sections*0.4).x+' '+P(cx,cy,aR1+(aR2-aR1)*0.5, -360/sections*0.4).y+' '+aTip.x+' '+aTip.y;
+    aD += ' Q '+P(cx,cy,aR1+(aR2-aR1)*0.5, 360/sections*0.4).x+' '+P(cx,cy,aR1+(aR2-aR1)*0.5, 360/sections*0.4).y+' '+aR.x+' '+aR.y+' Z';
+    wedgeMarkup += '<path d="'+aD+'" fill="none" stroke="'+dark+'" stroke-width="'+(sw*2)+'"/>';
     
-    // Evolve rotation offsets
-    var rotL1 = rng() * 360/sections;
-    var rotL2 = rng() * 360/sections;
-    
-    var wedge = '';
-    
-    var layerData = '';
-    
-    function p2cart(r, aDeg) {
-       var rad = aDeg * Math.PI / 180;
-       return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+    var stippleCount = 80 + Math.floor(rng()*120);
+    var stips = '';
+    for(var sd=0; sd<stippleCount; sd++){
+       var sr = aR1 + (aR2 - aR1)*rng();
+       var sa = (rng()*2-1)*(360/sections*0.45) * (1 - (sr-aR1)/(aR2-aR1));
+       stips += '<circle cx="'+P(cx,cy,sr,sa).x+'" cy="'+P(cx,cy,sr,sa).y+'" r="'+(sw*0.5)+'" fill="'+dark+'"/>';
     }
-    
-    function drawStippledCurve(p0, p1, p2, r, color) {
-       var markup = '';
-       var d = Math.hypot(p1.x-p0.x, p1.y-p0.y) + Math.hypot(p2.x-p1.x, p2.y-p1.y);
-       if (d < 1) return markup;
-       for (var t=0; t<=1; t+= (r*2.5)/d) {
-          var u = 1-t;
-          var px = u*u*p0.x + 2*u*t*p1.x + t*t*p2.x;
-          var py = u*u*p0.y + 2*u*t*p1.y + t*t*p2.y;
-          markup += '<circle cx="'+px+'" cy="'+py+'" r="'+r+'" fill="'+color+'"/>';
-       }
-       return markup;
+    wedgeMarkup += stips;
+
+    if (rng() > 0.5) {
+       var fDot = P(cx, cy, aR2 + sw*15, 0);
+       wedgeMarkup += '<circle cx="'+fDot.x+'" cy="'+fDot.y+'" r="'+(sw*3)+'" fill="'+dark+'"/>';
     }
 
-    var cR = sizePx * 0.05;
-    layerData += '<circle cx="'+cx+'" cy="'+cy+'" r="'+(cR*0.3)+'" fill="'+gold+'"/>';
-    for (var i=0; i<12; i++) {
-        var p = p2cart(cR*0.6, i*(360/12));
-        layerData += '<circle cx="'+p.x+'" cy="'+p.y+'" r="'+(cR*0.1)+'" fill="'+cyan+'"/>';
-    }
-    for (var i=0; i<24; i++) {
-        var p = p2cart(cR*0.9, i*(360/24));
-        layerData += '<circle cx="'+p.x+'" cy="'+p.y+'" r="'+(cR*0.1)+'" fill="'+white+'"/>';
-    }
-    
-    // Evolve mutates leaf swoosh curves slightly
-    var sW1 = 20 + rng()*20; // 20 to 40 degrees
-    var sW2 = 10 + rng()*15; // 10 to 25 degrees
-    
-    for (var s=0; s<sections; s++) {
-        var angle = s * (360/sections);
-        var w = '';
-        
-        var pRin = cR * 1.1;
-        var pRout = cR * 3;
-        var base = p2cart(pRin, 0);
-        var tip = p2cart(pRout, 0);
-        var l = p2cart((pRin+pRout)*0.5, -wedgeHalf*0.8);
-        var r = p2cart((pRin+pRout)*0.5, wedgeHalf*0.8);
-        
-        w += drawStippledCurve(base, l, tip, sizePx*0.003, gold);
-        w += drawStippledCurve(base, r, tip, sizePx*0.003, gold);
-        
-        var tSteps = 8;
-        for (var t=1; t<tSteps; t++) {
-           var pr = pRin + (pRout-pRin)*(t/tSteps);
-           w += '<circle cx="'+p2cart(pr, 0).x+'" cy="'+p2cart(pr,0).y+'" r="'+(sizePx*0.004*(1-t/tSteps) + sizePx*0.002)+'" fill="'+cyan+'"/>';
-        }
-        
-        var sBase = p2cart(cR*2.5, wedgeHalf); 
-        var sTip = p2cart(cR*5, wedgeHalf*0.5);
-        var sCtrl1 = p2cart(cR*4, sW1);
-        var sTip2 = p2cart(cR*5, wedgeHalf*1.5);
-        var sCtrl2 = p2cart(cR*4, sW2);
-        
-        w += '<path d="M '+sBase.x+' '+sBase.y+' Q '+sCtrl1.x+' '+sCtrl1.y+' '+sTip.x+' '+sTip.y+' Q '+sCtrl2.x+' '+sCtrl2.y+' '+sBase.x+' '+sBase.y+' Z" fill="'+blue+'" stroke="'+cyan+'" stroke-width="'+(sizePx*0.002)+'"/>';
-        w += '<path d="M '+sBase.x+' '+sBase.y+' Q '+sCtrl1.x+' '+sCtrl1.y+' '+sTip2.x+' '+sTip2.y+' Q '+sCtrl2.x+' '+sCtrl2.y+' '+sBase.x+' '+sBase.y+' Z" fill="'+cyan+'" stroke="'+white+'" stroke-width="'+(sizePx*0.002)+'"/>';
-        
-        var tdBase = p2cart(cR*6, 0);
-        var tdTip = p2cart(cR*8.5, 0);
-        var tdL = p2cart(cR*7.2, -wedgeHalf*0.8);
-        var tdR = p2cart(cR*7.2, wedgeHalf*0.8);
-        var tdPath = 'M '+tdBase.x+' '+tdBase.y+' Q '+tdL.x+' '+tdL.y+' '+tdTip.x+' '+tdTip.y+' Q '+tdR.x+' '+tdR.y+' '+tdBase.x+' '+tdBase.y+' Z';
-        w += '<path d="'+tdPath+'" fill="'+blue+'"/>';
-        w += drawStippledCurve(tdBase, tdL, tdTip, sizePx*0.004, white);
-        w += drawStippledCurve(tdBase, tdR, tdTip, sizePx*0.004, white);
-        w += drawStippledCurve(p2cart(cR*6.2, 0), p2cart(cR*7.2, -wedgeHalf*0.6), p2cart(cR*8.2, 0), sizePx*0.003, cyan);
-        w += drawStippledCurve(p2cart(cR*6.2, 0), p2cart(cR*7.2, wedgeHalf*0.6), p2cart(cR*8.2, 0), sizePx*0.003, cyan);
-        
-        // Capture cell content from the unrotated first section
-        if (s === 0) {
-           cellContent += w;
-        }
-        
-        var angleLayer1 = angle + rotL1;
-        content += '<g transform="rotate('+angleLayer1+' '+cx+' '+cy+')">' + w + '</g>';
-    }
-    
-    // Add dots rotated separately to evolve
-    var rDot = cR * 5.3;
-    var rDot2 = sizePx*0.004;
-    var rDot3 = sizePx*0.006;
-    var sw = sizePx*0.002;
-    function P(x, y, r, a) { var rad = a*Math.PI/180; return {x: x+r*Math.cos(rad), y: y+r*Math.sin(rad)}; }
-    var dotG = '';
-    for(var s=0; s<sections; s++){
-       var a = s * (360/sections) + rotL2;
-       var dp = P(cx, cy, rDot, a);
-       dotG += '<circle cx="'+dp.x+'" cy="'+dp.y+'" r="'+rDot2+'" fill="'+gold+'"/>';
-       dotG += '<circle cx="'+dp.x+'" cy="'+dp.y+'" r="'+rDot3+'" fill="none" stroke="'+cyan+'" stroke-width="'+sw+'"/>';
-    }
-    content += dotG;
+    for(var s=0; s<sections; s++) content += '<g transform="rotate('+(s*360/sections)+' '+cx+' '+cy+')">' + wedgeMarkup + '</g>';
 
-    // Add grid lines for the cell tooltip
-    var cellGrid = '';
-    var gridColor = gold; 
-    var geomMaxY = sizePx * 0.44 * Math.sin(wedgeHalf * Math.PI / 180);
-    var axisY = cy + geomMaxY + sizePx*0.06; 
-    var fontSize = sizePx * 0.018;
-    cellGrid += '<line x1="'+cx+'" y1="'+axisY+'" x2="'+(cx + sizePx * 0.44 * Math.cos(wedgeHalf*Math.PI/180) + sizePx*0.02)+'" y2="'+axisY+'" stroke="'+gridColor+'" stroke-width="'+(sizePx*0.0015)+'" opacity="0.8"/>';
-    cellGrid += '<line x1="'+cx+'" y1="'+(axisY-sizePx*0.005)+'" x2="'+cx+'" y2="'+(axisY+sizePx*0.005)+'" stroke="'+gridColor+'" stroke-width="'+(sizePx*0.0015)+'"/>';
-    cellGrid += '<text x="'+(cx + fontSize*0.2)+'" y="'+(axisY + fontSize*0.8)+'" fill="'+gridColor+'" font-family="var(--mono)" font-size="'+fontSize+'" transform="rotate(60 '+(cx + fontSize*0.2)+' '+(axisY + fontSize*0.8)+')" text-anchor="start">0'+params.unit+'</text>';
-
-    var maxTextLength = sizePx * 0.12;
-    var textDownExt = maxTextLength * Math.sin(60 * Math.PI/180);
-    var textRightExt = maxTextLength * Math.cos(60 * Math.PI/180);
-    var maxR = sizePx * 0.44;
-    var wedgeHalfRad = wedgeHalf * Math.PI / 180;
-    
-    var viewMinX = cx - sizePx*0.05;
-    var viewMaxX = cx + maxR * Math.cos(wedgeHalfRad) + textRightExt + sizePx*0.05;
-    var viewMinY = cy - geomMaxY - sizePx*0.05;
-    var viewMaxY = axisY + textDownExt + sizePx*0.05;
-
-    var viewW = viewMaxX - viewMinX;
-    var viewH = viewMaxY - viewMinY;
-    
-    if (viewH < viewW * 0.4) {
-       var diff = (viewW * 0.4) - viewH;
-       viewH += diff;
-       viewMinY -= diff/2;
-    }
-
-    var cellViewBox = viewMinX + ' ' + viewMinY + ' ' + viewW + ' ' + viewH;
-    var finalCellContent = '<rect x="-1000" y="-1000" width="3000" height="3000" fill="'+bg+'"/>' + cellGrid + cellContent;
-
-    return { 
-      content: content, 
-      sections: sections, 
-      viewBox: '0 0 '+sizePx+' '+sizePx,
-      cellContent: finalCellContent,
-      cellViewBox: cellViewBox
-    };
+    var finalCellContent = '<rect x="-1000" y="-1000" width="3000" height="3000" fill="'+light+'"/>' + wedgeMarkup;
+    return { content: content, sections: sections, viewBox: '0 0 '+size+' '+size, cellContent: finalCellContent, cellViewBox: '0 0 '+size+' '+size };
   }
 
   var isDrawMode = false;
