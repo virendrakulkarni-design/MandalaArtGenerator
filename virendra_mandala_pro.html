@@ -770,6 +770,11 @@
                 <option value="exact-replica-5">Celestial Sunburst</option>
                 <option value="exact-replica-6">Gothic Rose</option>
               </optgroup>
+              <optgroup label="Painted Flora">
+                <option value="painted-watercolor">Watercolor Lotus</option>
+                <option value="painted-acrylic">Acrylic Sunburst</option>
+                <option value="painted-botanical">Botanical Wreath</option>
+              </optgroup>
             </select>
           </div>
           <div style="flex:1;">
@@ -1948,6 +1953,15 @@
     if (params.shapeStyle === 'exact-replica-6') {
       return generateExactReplica6SVG(params);
     }
+    if (params.shapeStyle === 'painted-watercolor') {
+      return generatePaintedWatercolorSVG(params);
+    }
+    if (params.shapeStyle === 'painted-acrylic') {
+      return generatePaintedAcrylicSVG(params);
+    }
+    if (params.shapeStyle === 'painted-botanical') {
+      return generatePaintedBotanicalSVG(params);
+    }
     var rng = mulberry32(params.seed);
     var conversion = { px: 1, in: 96, cm: 37.795, mm: 3.7795 };
     var sizePx = params.size * conversion[params.unit];
@@ -2545,6 +2559,188 @@
 
   // --- PRO MODE LOGIC ---
   
+  // --- PAINTED STYLES ---
+
+  function generatePaintedWatercolorSVG(params) {
+    var rng = mulberry32(params.seed);
+    var size = params.size * (params.unit === 'in' ? 96 : params.unit === 'cm' ? 37.795 : params.unit === 'mm' ? 3.7795 : 1);
+    var cx = size/2, cy = size/2;
+    var maxR = size * 0.45; 
+    
+    var symmetryOptions = [5, 6, 7, 8, 12];
+    var sections = symmetryOptions[Math.floor(rng() * symmetryOptions.length)];
+    var currentP = currentPalette(rng);
+    var bg = currentP ? currentP.bg : '#ffffff';
+    var colors = currentP ? currentP.colors : ['#ff0000', '#00ff00', '#0000ff'];
+    
+    // Create subtle watercolor gradients
+    var defs = '<defs>';
+    for(var i=0; i<colors.length; i++) {
+       // Radial gradient to simulate pigment pooling at edges
+       defs += '<radialGradient id="wc-grad-'+i+'" cx="50%" cy="80%" r="70%">';
+       defs += '<stop offset="0%" stop-color="'+colors[i]+'" stop-opacity="0.85"/>';
+       defs += '<stop offset="70%" stop-color="'+colors[i]+'" stop-opacity="0.6"/>';
+       defs += '<stop offset="100%" stop-color="'+colors[i]+'" stop-opacity="0.95"/>';
+       defs += '</radialGradient>';
+    }
+    defs += '</defs>';
+
+    var content = defs + '<rect x="0" y="0" width="'+size+'" height="'+size+'" fill="'+bg+'"/>';
+    var wedgeMarkup = '';
+    
+    var numLayers = 4 + Math.floor(rng()*3);
+    for(var l=numLayers; l>=1; l--) {
+       var layerR = maxR * (l/numLayers) * (0.8 + rng()*0.3);
+       var petalW = layerR * (0.3 + rng()*0.4);
+       var colorIdx = Math.floor(rng() * colors.length);
+       
+       var d = 'M '+cx+' '+cy+' ';
+       d += 'C '+(cx-petalW)+' '+(cy+layerR*0.3)+' '+(cx-petalW*1.2)+' '+(cy+layerR*0.8)+' '+cx+' '+(cy+layerR)+' ';
+       d += 'C '+(cx+petalW*1.2)+' '+(cy+layerR*0.8)+' '+(cx+petalW)+' '+(cy+layerR*0.3)+' '+cx+' '+cy+' Z';
+       
+       // Add a slight rotation offset for natural imperfection
+       var jitter = (rng() - 0.5) * 5;
+       
+       // To simulate watercolor overlapping, we use a group with mix-blend-mode if supported, or just opacity
+       // SVG 1.1 mix-blend-mode via CSS
+       var style = 'mix-blend-mode: multiply; opacity: 0.85;';
+       
+       var layerContent = '';
+       for(var s=0; s<sections; s++) {
+          var angle = (s * 360 / sections) + jitter + (l%2==0 ? (180/sections) : 0);
+          layerContent += '<path d="'+d+'" fill="url(#wc-grad-'+colorIdx+')" style="'+style+'" transform="rotate('+angle+' '+cx+' '+cy+')"/>';
+       }
+       content += layerContent;
+       wedgeMarkup += layerContent; 
+    }
+    
+    // Add central core details
+    var coreCIdx = Math.floor(rng() * colors.length);
+    for(var s=0; s<sections*2; s++) {
+        var angle = s * 360 / (sections*2);
+        var innerR = maxR * 0.05 + rng()*maxR*0.05;
+        content += '<circle cx="'+cx+'" cy="'+(cy+innerR)+'" r="'+(size*0.005)+'" fill="'+colors[coreCIdx]+'" opacity="0.9" transform="rotate('+angle+' '+cx+' '+cy+')"/>';
+    }
+
+    return { content: content, sections: sections, viewBox: '0 0 '+size+' '+size, cellContent: content, cellViewBox: '0 0 '+size+' '+size };
+  }
+
+  function generatePaintedAcrylicSVG(params) {
+    var rng = mulberry32(params.seed);
+    var size = params.size * (params.unit === 'in' ? 96 : params.unit === 'cm' ? 37.795 : params.unit === 'mm' ? 3.7795 : 1);
+    var cx = size/2, cy = size/2;
+    var maxR = size * 0.45; 
+    
+    var symmetryOptions = [8, 12, 16, 24];
+    var sections = symmetryOptions[Math.floor(rng() * symmetryOptions.length)];
+    var currentP = currentPalette(rng);
+    var bg = currentP ? currentP.bg : '#ffffff';
+    var colors = currentP ? currentP.colors : ['#ff0000', '#00ff00', '#0000ff'];
+    
+    var defs = '<defs>';
+    for(var i=0; i<colors.length; i++) {
+       // Linear gradient to simulate thick, streaky acrylic paint strokes
+       defs += '<linearGradient id="acrylic-grad-'+i+'" x1="0%" y1="0%" x2="0%" y2="100%">';
+       defs += '<stop offset="0%" stop-color="'+colors[i]+'" stop-opacity="1"/>';
+       defs += '<stop offset="30%" stop-color="'+colors[(i+1)%colors.length]+'" stop-opacity="0.9"/>';
+       defs += '<stop offset="100%" stop-color="'+colors[i]+'" stop-opacity="0.8"/>';
+       defs += '</linearGradient>';
+       
+       // A shadow filter for thick paint impasto effect
+       defs += '<filter id="impasto"><feDropShadow dx="1" dy="2" stdDeviation="2" flood-opacity="0.4"/></filter>';
+    }
+    defs += '</defs>';
+
+    var content = defs + '<rect x="0" y="0" width="'+size+'" height="'+size+'" fill="'+bg+'"/>';
+    
+    var numLayers = 5 + Math.floor(rng()*4);
+    for(var l=numLayers; l>=1; l--) {
+       var layerR = maxR * (l/numLayers) * (0.9 + rng()*0.2);
+       var petalW = layerR * (0.15 + rng()*0.15);
+       var colorIdx = Math.floor(rng() * colors.length);
+       
+       // Sharp, pointed sunburst petals
+       var d = 'M '+cx+' '+cy+' ';
+       d += 'Q '+(cx-petalW)+' '+(cy+layerR*0.5)+' '+cx+' '+(cy+layerR)+' ';
+       d += 'Q '+(cx+petalW)+' '+(cy+layerR*0.5)+' '+cx+' '+cy+' Z';
+       
+       var layerContent = '';
+       for(var s=0; s<sections; s++) {
+          var angle = (s * 360 / sections) + (l%2==0 ? (180/sections) : 0);
+          layerContent += '<path d="'+d+'" fill="url(#acrylic-grad-'+colorIdx+')" filter="url(#impasto)" transform="rotate('+angle+' '+cx+' '+cy+')"/>';
+       }
+       content += layerContent;
+    }
+    return { content: content, sections: sections, viewBox: '0 0 '+size+' '+size, cellContent: content, cellViewBox: '0 0 '+size+' '+size };
+  }
+
+  function generatePaintedBotanicalSVG(params) {
+    var rng = mulberry32(params.seed);
+    var size = params.size * (params.unit === 'in' ? 96 : params.unit === 'cm' ? 37.795 : params.unit === 'mm' ? 3.7795 : 1);
+    var cx = size/2, cy = size/2;
+    var maxR = size * 0.45; 
+    
+    var sections = 6 + Math.floor(rng()*4)*2; // 6, 8, 10, 12, 14
+    var currentP = currentPalette(rng);
+    var bg = currentP ? currentP.bg : '#ffffff';
+    var colors = currentP ? currentP.colors : ['#ff0000', '#00ff00', '#0000ff'];
+    
+    var defs = '<defs>';
+    for(var i=0; i<colors.length; i++) {
+       defs += '<radialGradient id="bot-grad-'+i+'" cx="50%" cy="90%" r="90%">';
+       defs += '<stop offset="0%" stop-color="'+colors[i]+'" stop-opacity="1"/>';
+       defs += '<stop offset="100%" stop-color="'+colors[(i+2)%colors.length]+'" stop-opacity="0.4"/>';
+       defs += '</radialGradient>';
+    }
+    defs += '</defs>';
+
+    var content = defs + '<rect x="0" y="0" width="'+size+'" height="'+size+'" fill="'+bg+'"/>';
+    
+    var numLayers = 4 + Math.floor(rng()*3);
+    for(var l=numLayers; l>=1; l--) {
+       var layerR = maxR * (l/numLayers) * (0.8 + rng()*0.3);
+       var colorIdx = Math.floor(rng() * colors.length);
+       var isLeaf = rng() > 0.5;
+       
+       var d = 'M '+cx+' '+cy+' ';
+       if (isLeaf) {
+          // Leaf shape
+          var leafW = layerR * 0.3;
+          d += 'C '+(cx-leafW)+' '+(cy+layerR*0.2)+' '+(cx-leafW)+' '+(cy+layerR*0.8)+' '+cx+' '+(cy+layerR)+' ';
+          d += 'C '+(cx+leafW)+' '+(cy+layerR*0.8)+' '+(cx+leafW)+' '+(cy+layerR*0.2)+' '+cx+' '+cy+' Z';
+          // Central vein
+          d += ' M '+cx+' '+cy+' L '+cx+' '+(cy+layerR*0.9);
+       } else {
+          // Rounded flower petal
+          var petalW = layerR * 0.6;
+          d += 'C '+(cx-petalW)+' '+(cy+layerR*0.4)+' '+(cx-petalW*0.6)+' '+(cy+layerR)+' '+cx+' '+(cy+layerR)+' ';
+          d += 'C '+(cx+petalW*0.6)+' '+(cy+layerR)+' '+(cx+petalW)+' '+(cy+layerR*0.4)+' '+cx+' '+cy+' Z';
+       }
+       
+       var layerContent = '';
+       for(var s=0; s<sections; s++) {
+          var angle = (s * 360 / sections) + (l%2==0 ? (180/sections) : 0);
+          var strokeCol = isLeaf ? colors[(colorIdx+1)%colors.length] : 'none';
+          var strokeW = isLeaf ? (size*0.003) : 0;
+          layerContent += '<path d="'+d+'" fill="url(#bot-grad-'+colorIdx+')" stroke="'+strokeCol+'" stroke-width="'+strokeW+'" style="mix-blend-mode: normal; opacity: 0.9;" transform="rotate('+angle+' '+cx+' '+cy+')"/>';
+       }
+       content += layerContent;
+    }
+    
+    // Stamen details in the center
+    var cIdx = Math.floor(rng() * colors.length);
+    for(var s=0; s<sections*3; s++) {
+        var angle = s * 360 / (sections*3);
+        var stamL = maxR * 0.15 + rng()*maxR*0.1;
+        var dotX = cx;
+        var dotY = cy + stamL;
+        content += '<line x1="'+cx+'" y1="'+cy+'" x2="'+dotX+'" y2="'+dotY+'" stroke="'+colors[cIdx]+'" stroke-width="'+(size*0.002)+'" opacity="0.7" transform="rotate('+angle+' '+cx+' '+cy+')"/>';
+        content += '<circle cx="'+dotX+'" cy="'+dotY+'" r="'+(size*0.006)+'" fill="'+colors[(cIdx+1)%colors.length]+'" transform="rotate('+angle+' '+cx+' '+cy+')"/>';
+    }
+
+    return { content: content, sections: sections, viewBox: '0 0 '+size+' '+size, cellContent: content, cellViewBox: '0 0 '+size+' '+size };
+  }
+
   function generateExactReplicaSVG(params) {
     var rng = mulberry32(params.seed);
     var size = params.size * (params.unit === 'in' ? 96 : params.unit === 'cm' ? 37.795 : params.unit === 'mm' ? 3.7795 : 1);
