@@ -92,25 +92,51 @@
   .rail::-webkit-scrollbar { width: 0; background: transparent; }
   
   @media (max-width: 900px){
-    .rail{ 
+    html, body, .app {
+      height: auto;
+      min-height: 100vh;
+      overflow: visible;
+      overflow-x: hidden;
+    }
+    .app {
+      display: flex;
+      flex-direction: column;
+    }
+    .rail { 
+      position: relative;
       top: 0; left: 0; bottom: auto; width: 100%; border-radius: 0;
       border: none; border-bottom:1px solid var(--border); 
       box-shadow: 0 4px 24px rgba(0,0,0,0.2); 
-      max-height: 50vh;
+      max-height: none;
+      overflow: visible;
+      flex: 0 0 auto;
     }
     .stage {
-      top: 50vh; /* Push stage below the rail on mobile */
-      height: 50vh;
-      bottom: 0;
+      position: relative;
+      top: 0;
+      height: auto;
+      min-height: 100vw;
+      padding: 40px 0;
+      flex: 1 1 auto;
     }
     .canvas-wrap {
       width: 90vw !important;
       height: 90vw !important;
       max-width: 500px !important;
+      margin: 0 auto;
     }
     .cell-tooltip {
+      position: relative;
       width: 90vw !important;
-      bottom: 12px;
+      bottom: auto;
+      left: auto;
+      transform: none;
+      margin: 40px auto 20px;
+    }
+    .meta {
+      position: relative;
+      bottom: auto;
+      margin-top: 20px;
     }
   }
   .brand{
